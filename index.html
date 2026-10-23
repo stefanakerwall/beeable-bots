@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Beeable – uttryck och rörelser</title></head><body style="margin:0;background:#fff">
+<div id="beeable-eyes-demo">
+  <div class="bee-row" role="group" aria-label="Läge">
+    <button type="button" data-emo="auto" aria-pressed="true">Automatiskt</button>
+    <button type="button" class="bee-pause" aria-pressed="false">Pausa</button>
+  </div>
+  <div class="bee-label">Känslor och rörelser</div>
+  <div class="bee-grid bee-emotions" role="group" aria-label="Välj känsla eller rörelse"></div>
+  <canvas role="img" aria-label="Sex runda Beeable-avatarer på vit bakgrund."></canvas>
+  <p class="bee-status" aria-live="polite"></p>
+  <div class="bee-bottom">
+    <div>
+      <div class="bee-label">Blickriktning</div>
+      <div class="bee-directions" role="group" aria-label="Blickriktning">
+        <button type="button" data-gaze="up-left" aria-pressed="false" aria-label="Titta uppåt åt vänster">↖</button>
+        <button type="button" data-gaze="up" aria-pressed="false" aria-label="Titta uppåt">↑</button>
+        <button type="button" data-gaze="up-right" aria-pressed="false" aria-label="Titta uppåt åt höger">↗</button>
+        <button type="button" data-gaze="left" aria-pressed="false" aria-label="Titta åt vänster">←</button>
+        <button type="button" data-gaze="front" aria-pressed="false" aria-label="Titta rakt fram">•</button>
+        <button type="button" data-gaze="right" aria-pressed="false" aria-label="Titta åt höger">→</button>
+        <button type="button" data-gaze="down-left" aria-pressed="false" aria-label="Titta neråt åt vänster">↙</button>
+        <button type="button" data-gaze="down" aria-pressed="false" aria-label="Titta neråt">↓</button>
+        <button type="button" data-gaze="down-right" aria-pressed="false" aria-label="Titta neråt åt höger">↘</button>
+      </div>
+    </div>
+    <div class="bee-shapecol">
+      <div class="bee-label">Form</div>
+      <div class="bee-grid bee-shapes" role="group" aria-label="Kroppsform"></div>
+      <details class="bee-fine">
+        <summary>Finjustera</summary>
+        <label>Vrid vänster/höger <input type="range" data-fine="yaw" min="-1" max="1" step="0.01" value="0"></label>
+        <label>Titta upp/ner <input type="range" data-fine="pitch" min="-1" max="1" step="0.01" value="0"></label>
+        <label>Studs <input type="range" data-fine="bounce" min="0" max="1" step="0.01" value="0"></label>
+        <label>Ögonöppning <input type="range" data-fine="open" min="0" max="1.4" step="0.01" value="1"></label>
+        <label>Tempo <input type="range" data-fine="tempo" min="0.25" max="2" step="0.01" value="1"></label>
+        <button type="button" class="bee-reset">Återställ</button>
+      </details>
+    </div>
+  </div>
+</div>
+<style>
+#beeable-eyes-demo{background:#fff;color:#24231f;padding:16px 12px 10px;font:14px/1.4 system-ui,sans-serif;color-scheme:light;max-width:1100px;margin:0 auto}
+#beeable-eyes-demo .bee-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:0 0 6px}
+#beeable-eyes-demo .bee-label{text-align:center;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#8a857a;margin:6px 0 6px}
+#beeable-eyes-demo .bee-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+#beeable-eyes-demo .bee-grid button{padding:6px 11px;min-height:34px;font-size:13px}
+#beeable-eyes-demo .bee-directions{display:grid;grid-template-columns:repeat(3,44px);gap:5px;justify-content:center;margin:0 auto}
+#beeable-eyes-demo .bee-directions button{min-height:44px;padding:5px}
+#beeable-eyes-demo button{font:inherit;color:#47443c;background:#fff;border:1px solid #e6e2da;border-radius:22px;padding:9px 13px;min-height:42px;cursor:pointer}
+#beeable-eyes-demo button[aria-pressed="true"]{background:#24231f;color:#fff;border-color:#24231f}
+#beeable-eyes-demo button:focus-visible,#beeable-eyes-demo summary:focus-visible,#beeable-eyes-demo input:focus-visible{outline:3px solid #dda63d;outline-offset:3px}
+#beeable-eyes-demo canvas{display:block;width:100%;touch-action:pan-y;margin-top:6px}
+#beeable-eyes-demo .bee-status{text-align:center;color:#8a857a;font-size:13px;margin:2px 0 6px;min-height:1.4em}
+#beeable-eyes-demo .bee-bottom{display:flex;flex-wrap:wrap;justify-content:center;gap:18px 40px;align-items:flex-start}
+#beeable-eyes-demo .bee-shapecol{max-width:520px}
+#beeable-eyes-demo .bee-fine{margin:10px auto 0;text-align:center}
+#beeable-eyes-demo .bee-fine summary{cursor:pointer;color:#47443c;display:inline-block;padding:4px 10px;border-radius:14px}
+#beeable-eyes-demo .bee-fine label{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:340px;margin:6px auto;font-size:13px;color:#47443c}
+#beeable-eyes-demo .bee-fine input{width:170px;accent-color:#24231f}
+#beeable-eyes-demo .bee-reset{min-height:32px;padding:4px 12px;font-size:13px;margin-top:4px}
+</style>
+<script>
+(()=>{
+'use strict';
+const root=document.getElementById('beeable-eyes-demo');
+const canvas=root.querySelector('canvas'),ctx=canvas.getContext('2d');
+const palette=['#DDA63D','#7294B6','#7C9F88','#C9877D','#A08BAD','#689E9E'];
+const TAU=Math.PI*2,N=96,S=Math.sin,C=Math.cos,abs=Math.abs;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,mix=(a,b,t)=>a+(b-a)*t,mod=(x,m)=>((x%m)+m)%m;
+const ss=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+const win=(u,a,b,e=.12)=>ss(a-e,a,u)*(1-ss(b,b+e,u));          // mjukt fönster [a,b]
+const o=(t,f,ph=0)=>S(t*TAU*f+ph);                              // oscillator, f i Hz
+const gauss=()=>{let s=0;for(let i=0;i<4;i++)s+=Math.random();return (s-2)/.58;};
+const reduceQ=window.matchMedia('(prefers-reduced-motion: reduce)');
+
+/* ---------- Kroppsformer: alla samplas som N radier (polärt) och morfas punkt för punkt ---------- */
+function polyToPolar(pts){
+  const out=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    const th=i/N*TAU,dx=C(th),dy=S(th);let best=0;
+    for(let j=0;j<pts.length;j++){
+      const p1=pts[j],p2=pts[(j+1)%pts.length],ex=p2[0]-p1[0],ey=p2[1]-p1[1],den=dx*ey-dy*ex;
+      if(abs(den)<1e-9)continue;
+      const t=(p1[0]*ey-p1[1]*ex)/den,s=(p1[0]*dy-p1[1]*dx)/den;
+      if(t>0&&s>=0&&s<=1&&t>best)best=t;
+    }
+    out[i]=best||1;
+  }
+  return out;
+}
+const fromFn=f=>{const a=new Float32Array(N);for(let i=0;i<N;i++)a[i]=f(i/N*TAU);return a;};
+const heartPts=(()=>{const p=[];for(let k=0;k<240;k++){const t=k/240*TAU;p.push([16*S(t)**3,-(13*C(t)-5*C(2*t)-2*C(3*t)-C(4*t))]);}
+  let mn=1e9,mx=-1e9;p.forEach(q=>{mn=Math.min(mn,q[1]);mx=Math.max(mx,q[1]);});const cy=(mn+mx)/2+1.2;
+  return p.map(q=>[q[0]/15.2,(q[1]-cy)/15.2]);})();
+const dropPts=(()=>{const p=[];for(let k=0;k<240;k++){const t=k/240*TAU;p.push([1.32*S(t)*S(t/2),-1.15*C(t)-.15]);}return p;})();
+const meltPts=(()=>{const p=[];for(let k=0;k<240;k++){const t=k/240*TAU,lo=S(t)>0;
+  p.push([C(t)*(lo?1.42+.04*S(t*9):1.05),(lo?.36*S(t)+.035*S(t*11)*S(t):.82*S(t))+.6]);}return p;})();
+const hash=k=>{const x=S(k*127.1+311.7)*43758.5453;return x-Math.floor(x);};
+const SHAPES={
+  circle:{label:'Cirkel',face:[0,1,1],r:fromFn(()=>1)},
+  heart:{label:'Hjärta',face:[-.05,.94,1],r:polyToPolar(heartPts)},
+  hex:{label:'Hexagon',face:[0,.97,1],r:fromFn(th=>1.09*C(Math.PI/6)/C(mod(th,Math.PI/3)-Math.PI/6))},
+  star:{label:'Stjärna',face:[.07,.8,1],r:fromFn(th=>.74+.42*((1+C(5*(th+Math.PI/2)))/2)**2.5)},
+  squircle:{label:'Rundad kvadrat',face:[0,1,1],r:fromFn(th=>.97*(abs(C(th))**4+abs(S(th))**4)**-.25)},
+  blob:{label:'Blobb',face:[0,.97,1],fn:(th,t)=>1+.075*S(3*th+t*1.6)+.05*S(5*th-t*2.2+1)+.03*S(2*th+t*.9)},
+  drop:{label:'Droppe',face:[.13,.95,.95],r:polyToPolar(dropPts)},
+  spiky:{label:'Taggig',face:[0,.93,1],fn:(th,t)=>{const x=th/TAU*13,k=Math.floor(x),f=x-k,tri=1-abs(2*f-1);
+    return .95+(.1+.08*hash(k))*tri**1.4+.015*S(t*31+k*2.1);}},
+  melt:{label:'Smält',face:[.4,.86,.62],r:polyToPolar(meltPts)}
+};
+
+/* ---------- Parametrar (alla fjädrar) ---------- */
+const BODYK=['bx','by','roll','yaw','pitch','scale','squash','fy','fs','fsy','spacing','gx','gy','lean'];
+const EYEK=['open','w','h','round','lidTop','slant','curveTop','lidBot','slantBot','curveBot','happy','arch','thick','tilt','escale'];
+const ANTK=['splay','bend','len','fwd'];
+const BASE={bx:0,by:0,roll:0,yaw:0,pitch:0,scale:1,squash:0,spacing:1,gx:0,gy:0,lean:0,
+  open:1,w:.29,h:.64,round:1,lidTop:0,slant:0,curveTop:0,lidBot:0,slantBot:0,curveBot:0,happy:0,arch:.12,thick:.125,tilt:0,escale:1,
+  splay:.62,bend:.35,len:.67,fwd:0,
+  shape:'circle',hopH:0,hopPeriod:.6,dart:.15,dartRate:1,blinkRate:.25,blinkStyle:'normal'};
+const KEYS=[...BODYK];EYEK.forEach(k=>KEYS.push(k+'L',k+'R'));ANTK.forEach(k=>KEYS.push(k+'L',k+'R'));
+const SPR={bx:[160,15],by:[160,15],roll:[120,13],yaw:[110,15],pitch:[110,15],scale:[170,12],squash:[260,11],
+  fy:[120,18],fs:[120,18],fsy:[120,18],spacing:[150,18],gx:[520,32],gy:[520,32],lean:[100,6.5]};
+const springOf=k=>{if(SPR[k])return SPR[k];const b=k.slice(0,-1);
+  if(b==='escale')return [320,15];if(b==='open')return [420,30];if(b==='happy')return [220,22];
+  if(ANTK.includes(b))return [105,6.5];return [280,24];};
+
+/* ---------- Känslor: varje preset är en levande loop (t = sekunder sedan start) ---------- */
+const P={
+ lugn:{label:'Lugn',f:(t,a)=>({by:.015*o(t,.18),squash:.02*o(t,.18),roll:.04*o(t,.08),yaw:.12*o(t,.05,a.seed*6),
+   blinkStyle:'slow',blinkRate:.18,dart:.08,splay:.62+.05*o(t,.18,1),bend:.35+.06*o(t,.14)})},
+ glad:{label:'Glad',f:(t,a)=>({happy:1,w:.3,arch:.13,hopH:.16,hopPeriod:.6,roll:.08*o(t,.4),yaw:.15*o(t,.2,a.seed),
+   splay:.52+.1*o(t,1.6),bend:.3,blinkRate:.15})},
+ exalterad:{label:'Exalterad',f:(t,a)=>({w:.32,escale:1.2,happy:1,arch:.17,thick:.13,spacing:1.08,hopH:.55,hopPeriod:.8,
+   roll:.16*o(t,.9),yaw:.28*o(t,.45),shape:'star',shapeAmt:a.air?1:.55,
+   splayL:.38+.28*o(t,7),splayR:.38+.28*o(t,7,Math.PI),len:.74,dart:.5,dartRate:3,blinkRate:.1})},
+ skrattar:{label:'Skrattar',f:(t,a)=>{const b=abs(o(t,2.6));return {happy:1,w:.33,arch:.16,thick:.1,tilt:-.12,
+   by:-.06*b,squash:.07*o(t,5.2),pitch:.22+.05*o(t,5.2),roll:.1*o(t,.35)+.04*o(t,2.6),
+   splay:.72+.16*o(t,5.2),bend:.5,blinkRate:0,shape:'squircle',shapeAmt:.25+.15*b};}},
+ kar:{label:'Kär',f:(t,a)=>{const u=mod(t,1.05),beat=Math.exp(-(((u-.08)/.05)**2))+.7*Math.exp(-(((u-.3)/.05)**2));
+   return {shape:'heart',scale:1+.07*beat,happy:1,arch:.11,thick:.13,escale:1.12,spacing:.95,gy:-.15,
+   roll:.12*o(t,.35),bx:.06*o(t,.35),yaw:.12*o(t,.18),pitch:.08,
+   splay:.42,bend:-.55+.08*o(t,1),len:.66,blinkStyle:'slow',blinkRate:.4,dart:.05};}},
+ stolt:{label:'Stolt',f:(t,a)=>({shape:'hex',pitch:.26,scale:1.07,squash:-.06,lidTop:.38,curveTop:-.12,lidBot:.22,w:.31,
+   yaw:.16*o(t,.09),roll:.05*o(t,.09,1),hopH:.09,hopPeriod:2.4,splay:.4+.04*o(t,.5),len:.78,bend:.15,blinkStyle:'slow',blinkRate:.15,dart:.04})},
+ dansar:{label:'Dansar',f:(t,a)=>{const bar=Math.floor(t/8),u=mod(t,8),spin=(bar+ss(6,7.1,u))*TAU,alt=Math.floor(t/2)%2;
+   return {hopH:.2,hopPeriod:.5,bx:.13*o(t,.5),roll:.18*o(t,.5),yaw:.3*o(t,.25)+spin,pitch:.08*o(t,1),
+   happy:alt?1:0,lidBot:alt?0:.12,curveBot:alt?0:.1,w:.31,h:.6,arch:.14,escale:alt?1:1.08,
+   splayL:.55+.35*o(t,2),splayR:.55+.35*o(t,2,Math.PI),bend:.3+.2*o(t,1),blinkRate:.1,dart:.05,
+   shape:'star',shapeAmt:.25*win(mod(t,2),0,.12,.08)};}},
+ blinkar:{label:'Blinkar',f:(t,a)=>{const u=mod(t,2.6),k=win(u,.7,1.35,.08);
+   return {happyR:k,hR:.64-.2*k,archR:.13,tiltR:-.12*k,lidTopL:.08*k,lidBotL:.14*k,escaleL:1+.06*k,
+   roll:.13*k,pitch:.06*k,yaw:.12*k,hopH:.08,hopPeriod:2.6,splayR:.62-.3*k,splayL:.62+.08*k,blinkRate:.1,dart:.05};}},
+ nyfiken:{label:'Nyfiken',f:(t,a)=>({roll:.16+.05*o(t,.12),escale:1.08,w:.31,h:.68,openL:1.05,openR:.95,scale:1.02,
+   by:.02*o(t,.35),splayL:.28+.06*o(t,.6),lenL:.76,splayR:.74,bendR:.55,fwdL:.3,
+   dart:.5,dartRate:1.6,blinkRate:.25,pointer:true,gx:.6*o(t,.11,a.seed*5),gy:.35*o(t,.08)})},
+ forvanad:{label:'Förvånad',f:(t,a)=>{const u=mod(t,3.4),pre=win(u,0,.14,.04),pop=ss(.1,.25,u)*(1-ss(2.4,3.2,u));
+   return {open:1-.5*pre,escale:1+.3*pop,w:.29+.06*pop,h:.64+.06*pop,spacing:1+.3*pop,round:1,squash:.18*pre-.1*pop,by:-.05*pop,pitch:.12*pop,
+   hopH:.3,hopPeriod:3.4,splay:.62-.5*pop,len:.67+.12*pop,bend:.35-.4*pop,
+   shape:'spiky',shapeAmt:.8*win(u,.18,.5,.15),blinkRate:.05,dart:.05};}},
+ tanker:{label:'Tänker',f:(t,a)=>{const side=mod(t,6)<3.4?-1:-.3;return {gx:.5*side,gy:-.62,yaw:.2*side,pitch:.2,roll:.09+.04*o(t,.15),
+   lidBotL:.25,lidTopR:.22,slantR:.25,escaleL:1.03,
+   splayR:.42+.35*Math.max(0,o(t,1.4))**6,splayL:.75,bendL:.5,shape:'blob',shapeAmt:.3,dart:.12,dartRate:.6,blinkRate:.18};}},
+ forvirrad:{label:'Förvirrad',f:(t,a)=>{const tl=Math.tanh(3*o(t,.33));return {roll:.22*tl,yaw:.2*o(t,.15),gx:.45*o(t,.18),gy:-.25,
+   escaleL:1.15,openL:1.05,slantL:-.35,lidTopR:.38,lidBotR:.2,slantR:.45,escaleR:.86,tiltR:.1,
+   splayL:.2,lenL:.75,splayR:1.25,bendR:-.65,lean:.2*o(t,.25),shape:'blob',shapeAmt:.7,dart:.5,dartRate:2.2,blinkRate:.3};}},
+ misstanksam:{label:'Misstänksam',f:(t,a)=>{const g=Math.tanh(3*o(t,.22));return {gx:.62*g,yaw:.22*g,bx:-.03*g,roll:-.07,
+   lidTop:.43,lidBot:.27,slant:.18,curveTop:-.1,h:.6,w:.33,lidTopL:.52,tilt:.05,
+   splayL:.95,splayR:.38,fwd:.3,lean:-.08,blinkRate:.04,dart:.02};}},
+ koncentrerad:{label:'Koncentrerad',f:(t,a)=>({gx:.25,gy:.22,yaw:.12,pitch:-.14,lidTop:.24,lidBot:.12,slant:.25,curveTop:-.08,
+   fwd:.55,splay:.28,bend:-.05+.12*win(mod(t,1.9),0,.08,.05),len:.7,shape:'squircle',shapeAmt:.55,blinkRate:.05,dart:.03})},
+ blyg:{label:'Blyg',f:(t,a)=>{const u=mod(t,3.8),g=win(u,1.6,2.2,.15);return {scale:.88,squash:.06,yaw:-.36+.24*g,pitch:-.24+.18*g,roll:-.12,
+   gx:-.3+.6*g,gy:.35-.35*g,escale:.9,lidTop:.15,lidBot:.14,curveBot:.1,slant:-.25,
+   splay:.95,bend:-.5,lean:-.1,len:.6,blinkRate:.35,dart:.06};}},
+ ledsen:{label:'Ledsen',f:(t,a)=>{const sigh=Math.max(0,o(t,.25))**3;return {shape:'drop',pitch:-.16,gy:.14,scale:.93+.03*sigh,squash:.06-.06*sigh,
+   lidTop:.2,slant:-.55,h:.62,tilt:.16,escale:1.06,roll:.05*o(t,.07),by:.02,
+   splay:1.55,bend:.55,len:.62,blinkStyle:'slow',blinkRate:.15,dart:.08,dartRate:.4};}},
+ radd:{label:'Rädd',f:(t,a)=>({escale:.95,w:.31,h:.66,slant:-.32,lidTop:.08,squash:.1,scale:.9,by:.05,pitch:-.05,
+   bx:.012*o(t,17),yaw:.3*Math.tanh(4*o(t,.2,a.seed*4)),
+   splay:1.15+.04*o(t,15),fwd:-.5,bend:-.2,shape:'spiky',shapeAmt:.22,dart:.9,dartRate:5,blinkRate:.5})},
+ arg:{label:'Arg',f:(t,a)=>({shape:'spiky',shapeAmt:.85+.15*o(t,1.2),slant:.8,lidTop:.24,lidBot:.12,h:.56,w:.31,tilt:-.08,
+   bx:.022*o(t,9),pitch:-.12,scale:1.06+.03*o(t,1.2),squash:.05,hopH:.07,hopPeriod:1.2,
+   splay:.16+.04*o(t,13),fwd:.65,len:.72,bend:-.1,blinkRate:.08,dart:.02})},
+ trott:{label:'Trött',f:(t,a)=>{const u=mod(t,4.6),nod=u<3.7?(u/3.7)**2:1-ss(3.7,3.95,u);
+   return {pitch:-.4*nod,lidTop:.5+.42*nod,curveTop:.1,shape:'melt',shapeAmt:.15+.75*nod,squash:.08*nod,by:.03*nod,roll:.08*nod,
+   yaw:.1*o(t,.06),splay:1.15+.4*nod,bend:.55,len:.6,blinkStyle:'sleepy',blinkRate:.25,dart:.03};}},
+ uttrakad:{label:'Uttråkad',f:(t,a)=>{const sigh=Math.max(0,o(t,.2))**4;return {lidTop:.5,curveTop:-.05,lidBot:.05,
+   gx:.5*o(t,.09),gy:-.35+.18*C(t*.6),yaw:.14*o(t,.04),roll:.1*o(t,.05),squash:.03+.07*sigh,scale:1-.03*sigh,
+   splay:1.3,bend:.4,lean:.15*o(t,.13),len:.63,blinkStyle:'slow',blinkRate:.12,dart:.04};}},
+ ja:{label:'Ja',f:(t,a)=>({pitch:.3*o(t,1.6)-.04,by:.02*o(t,1.6),squash:.035*o(t,1.6,1),curveBot:.12,lidBot:.16,h:.6,blinkRate:.15,dart:.02})},
+ nej:{label:'Nej',f:(t,a)=>({yaw:.5*o(t,1.5),roll:.05*o(t,1.5,.6),lidTop:.2,lidBot:.15,slant:-.15,h:.56,blinkRate:.05,dart:.02})},
+ studsar:{label:'Studsar',f:(t,a)=>({hopH:.65,hopPeriod:.82,escale:1.05,happy:a.air?1:0,arch:.14,roll:.06*o(t,.6),blinkRate:.1,dart:.1})},
+ snurrar:{label:'Snurrar',f:(t,a)=>{const u=mod(t,2.8);return {yaw:(Math.floor(t/2.8)+ss(.5,1.9,u))*TAU,hopH:.12,hopPeriod:1.4,
+   escale:1.05,splayL:.62+.2*o(t,2),splayR:.62+.2*o(t,2,2),blinkRate:.1,dart:.05};}}
+};
+const ORDER=['lugn','glad','exalterad','skrattar','kar','stolt','dansar','blinkar','nyfiken','forvanad','tanker','forvirrad','misstanksam',
+  'koncentrerad','blyg','ledsen','radd','arg','trott','uttrakad','ja','nej','studsar','snurrar'];
+const AUTO=ORDER.filter(k=>k!=='snurrar'||true);
+const MORPHS=['heart','hex','star','squircle','blob','drop','spiky','melt'];
+const DIRS={'up-left':[-.8,-.8],up:[0,-1],'up-right':[.8,-.8],left:[-1,0],front:[0,0],right:[1,0],'down-left':[-.8,.8],down:[0,1],'down-right':[.8,.8]};
+
+/* ---------- Tillstånd ---------- */
+let mode='auto',paused=reduceQ.matches,shapeOverride=null,gazeOverride=null,pointer=null;
+let w=600,h=460,cols=3,cw=200,ch=220,rad=60;
+const fine={yaw:0,pitch:0,bounce:0,open:1,tempo:1};
+const avatars=palette.map((color,i)=>{
+  const a={i,color,seed:Math.random(),t:0,segStart:0,v:{},vel:{},sr:new Float32Array(N).fill(1),sv:new Float32Array(N),
+    jy:0,jv:0,air:false,hopTimer:.3+i*.07,cx:0,cy:0,prevX:0,prevY:0,pvx:0,pvy:0,pyawv:0,
+    blink:{on:false,start:0,dur:.17,hold:0,next:1+Math.random()*3,type:'normal',dbl:false},
+    sac:{x:0,y:0,ax:0,ay:0,until:0,next:0},auto:{id:AUTO[(i*5+2)%AUTO.length],until:1.5+i*.9+Math.random()*1.2,shape:null,gaze:null}};
+  KEYS.forEach(k=>{const b=k.replace(/[LR]$/,'');a.v[k]=k in BASE?BASE[k]:(b in BASE&&!BODYK.includes(k)?BASE[b]:0);a.vel[k]=0;});
+  a.v.fs=1;a.v.fsy=1;a.v.fy=0;
+  return a;
+});
+
+function resolve(a){
+  const id=mode==='auto'?a.auto.id:mode,pr=P[id];
+  const tl=a.t-a.segStart+(mode==='auto'?a.seed*.5:-a.i*.11);
+  const q=Object.assign({},BASE,pr.f(tl,a));
+  const T={};
+  BODYK.forEach(k=>T[k]=q[k]);
+  EYEK.forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
+  ANTK.forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
+  let shape=q.shape,amt=q.shapeAmt??(shape==='circle'?0:1);
+  const ov=shapeOverride||(mode==='auto'?a.auto.shape:null);
+  if(ov){shape=ov;amt=ov==='circle'?0:1;}
+  const sf=SHAPES[shape].face;
+  T.fy=mix(0,sf[0],amt);T.fs=mix(1,sf[1],amt);T.fsy=mix(1,sf[2],amt);
+  // blick: emotionens egen blick + pilar/mus/auto-blick
+  let G=gazeOverride||(mode==='auto'?a.auto.gaze:null);
+  if(id==='nyfiken'&&pointer&&mode!=='auto'){G=[clamp((pointer.x-a.cx)/(cw*.75),-1,1),clamp((pointer.y-a.cy)/(ch*.75),-1,1)];T.gx=0;T.gy=0;}
+  if(G){T.yaw+=G[0]*.42;T.pitch-=G[1]*.32;T.gx+=G[0]*.55;T.gy+=G[1]*.5;}
+  T.yaw+=fine.yaw*1.1;T.pitch+=fine.pitch*.6;
+  T.openL*=fine.open;T.openR*=fine.open;
+  let hopH=q.hopH,hopPeriod=q.hopPeriod;
+  if(fine.bounce>0&&fine.bounce*.55>hopH){hopH=fine.bounce*.55;hopPeriod=.45+fine.bounce*.35;}
+  return {T,shape,amt,hopH,hopPeriod,dart:q.dart,dartRate:q.dartRate,blinkRate:q.blinkRate,blinkStyle:q.blinkStyle};
+}
+
+const GRAV=16;
+function startSegment(a){a.segStart=a.t;a.v.yaw=mod(a.v.yaw+Math.PI,TAU)-Math.PI;a.hopTimer=.15+a.i*.05;a.blink.next=Math.min(a.blink.next,a.t+.4+Math.random());}
+function pickAuto(a){
+  const cur=a.auto.id;let id;do{id=AUTO[Math.floor(Math.random()*AUTO.length)];}while(id===cur);
+  a.auto.id=id;a.auto.until=a.t+3.2+Math.random()*2.6;
+  a.auto.shape=Math.random()<.16?MORPHS[Math.floor(Math.random()*MORPHS.length)]:null;
+  const dk=Object.keys(DIRS);a.auto.gaze=Math.random()<.22?DIRS[dk[Math.floor(Math.random()*dk.length)]]:null;
+  startSegment(a);
+}
+
+function blinkAmount(a){
+  const B=a.blink;if(!B.on)return 0;
+  const tau=a.t-B.start,cl=B.dur*.38,op=B.dur*.62;
+  if(tau<cl)return ss(0,cl,tau);
+  if(tau<cl+B.hold)return 1;
+  return 1-ss(cl+B.hold,cl+B.hold+op,tau);
+}
+function updateBlink(a,R){
+  const B=a.blink;
+  if(!B.on&&a.t>=B.next&&R.blinkRate>0){
+    B.on=true;B.start=a.t;B.type=R.blinkStyle;
+    B.dur={normal:.17,slow:.5,sleepy:.75,pop:.22}[B.type]||.17;B.hold=B.type==='sleepy'?.45:B.type==='slow'?.08:0;
+    if(B.type==='normal'&&!B.dbl&&Math.random()<.2)B.dbl=true;
+    if(Math.random()<.08)B.type='pop';
+  }
+  if(B.on&&a.t-B.start>B.dur+B.hold){
+    B.on=false;
+    if(B.type==='pop'){a.vel.escaleL+=3.5;a.vel.escaleR+=3.5;}
+    if(B.dbl){B.dbl=false;B.next=a.t+.08;B.dblDone=true;}
+    else B.next=a.t+(R.blinkRate>0?(-Math.log(1-Math.random())/R.blinkRate)+.25:1e9);
+  }
+  if(R.blinkRate<=0&&!B.on)B.next=Math.max(B.next,a.t+2);
+}
+
+function step(a,dt,advance){
+  if(advance){a.t+=dt;if(mode==='auto'&&a.t>=a.auto.until)pickAuto(a);}
+  const R=resolve(a),T=R.T;
+  let sqAdd=0;
+  if(advance){
+    updateBlink(a,R);
+    // saccader med förväntan (liten rörelse åt motsatt håll först)
+    const Sc=a.sac;
+    if(a.t>=Sc.next){const nx=gauss()*R.dart,ny=gauss()*R.dart*.6;Sc.ax=Sc.x-(nx-Sc.x)*.35;Sc.ay=Sc.y-(ny-Sc.y)*.35;Sc.until=a.t+.05;
+      Sc.x=nx;Sc.y=ny;Sc.next=a.t+(.25+Math.random()*1.3)/Math.max(.2,R.dartRate);}
+    const pre=a.t<Sc.until;T.gx+=(pre?Sc.ax:Sc.x)+.025*S(a.t*4.7+a.seed*9);T.gy+=(pre?Sc.ay:Sc.y)+.02*S(a.t*3.9+a.seed*4);
+    // hopp med förberedande hukning, sträckning i luften och stöt vid landning
+    if(R.hopH>0&&!a.air){a.hopTimer-=dt;if(a.hopTimer<.12)sqAdd+=.16+R.hopH*.2;
+      if(a.hopTimer<=0){a.air=true;a.jv=-Math.sqrt(2*GRAV*R.hopH);a.hopTimer=Math.max(.06,R.hopPeriod-2*-a.jv/GRAV);}}
+    if(R.hopH<=0&&!a.air)a.hopTimer=Math.min(a.hopTimer,.3);
+  }
+  if(a.air){a.jv+=GRAV*dt;a.jy+=a.jv*dt;sqAdd-=clamp(abs(a.jv)*.035,0,.14);
+    if(a.jy>=0){a.jy=0;a.air=false;a.vel.squash+=a.jv*.55;for(let i=0;i<N;i++)a.sv[i]+=a.jv*.22*C(2*i/N*TAU);a.jv=0;}}
+  T.squash+=sqAdd;
+  // fjädrar
+  KEYS.forEach(k=>{const [K,D]=springOf(k);let w=a.vel[k];w+=(K*(T[k]-a.v[k])-D*w)*dt;a.vel[k]=w;a.v[k]+=w*dt;});
+  const sh=SHAPES[R.shape];
+  for(let i=0;i<N;i++){const th=i/N*TAU,tr=1+((sh.fn?sh.fn(th,a.t):sh.r[i])-1)*R.amt;
+    a.sv[i]+=(150*(tr-a.sr[i])-11*a.sv[i])*dt;a.sr[i]+=a.sv[i]*dt;}
+  // eftersläp i antennerna: kroppens hastighetsändring ger antennerna en knuff
+  const X=a.v.bx,Y=a.v.by+a.jy,vx=(X-a.prevX)/dt,vy=(Y-a.prevY)/dt,yv=a.vel.yaw;
+  if(a.stepped){const dvx=clamp(vx-a.pvx,-6,6),dvy=clamp(vy-a.pvy,-6,6),dyw=clamp(yv-a.pyawv,-6,6);
+    a.vel.splayL+=-dvy*.8;a.vel.splayR+=-dvy*.8;a.vel.bendL+=-dvy*.4;a.vel.bendR+=-dvy*.4;a.vel.lean+=-dvx*1.1-dyw*.25-a.vel.roll*0;}
+  a.prevX=X;a.prevY=Y;a.pvx=vx;a.pvy=vy;a.pyawv=yv;a.stepped=true;
+  a.v.squash=Math.max(-.35,a.v.squash);
+}
+
+/* ---------- Ritning ---------- */
+function rot(a,x,y,z){const cy=C(a.v.yaw),sy=S(a.v.yaw),cp=C(a.v.pitch),sp=S(a.v.pitch);
+  const y1=y*cp-z*sp,z1=y*sp+z*cp;return [x*cy+z1*sy,y1,-x*sy+z1*cy];}
+function rShape(a,ang){const f=mod(ang,TAU)/TAU*N,i=Math.floor(f)%N,j=(i+1)%N,u=f-Math.floor(f);return mix(a.sr[i],a.sr[j],u);}
+function bodyPath(a){
+  const pts=[];for(let i=0;i<N;i++){const th=i/N*TAU;pts.push([a.sr[i]*C(th),a.sr[i]*S(th)]);}
+  ctx.beginPath();const m=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];let s=m(pts[N-1],pts[0]);ctx.moveTo(s[0],s[1]);
+  for(let i=0;i<N;i++){const p=pts[i],q=m(p,pts[(i+1)%N]);ctx.quadraticCurveTo(p[0],p[1],q[0],q[1]);}
+  ctx.closePath();
+}
+function antenna(a,side){
+  const g=k=>a.v[k+(side<0?'L':'R')];
+  const A=side*g('splay')+a.v.lean,B=side*g('bend'),L=g('len'),F=g('fwd');
+  const r0=[side*.43,-.85,.305],dir=(th,f)=>[S(th)*C(f),-C(th)*C(f),S(f)];
+  const d1=dir(A-B,F*.6),d2=dir(A,F);
+  const c3=[r0[0]+L*.49*d1[0],r0[1]+L*.49*d1[1],r0[2]+L*.49*d1[2]],t3=[r0[0]+L*d2[0],r0[1]+L*d2[1],r0[2]+L*d2[2]];
+  const R=rot(a,...r0),Cc=rot(a,...c3),Tt=rot(a,...t3);
+  const k=rShape(a,Math.atan2(R[1],R[0]))-1,ox=R[0]*k,oy=R[1]*k;
+  ctx.lineWidth=.085;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(R[0]+ox,R[1]+oy);ctx.quadraticCurveTo(Cc[0]+ox,Cc[1]+oy,Tt[0]+ox,Tt[1]+oy);ctx.stroke();
+  ctx.save();ctx.translate(Tt[0]+ox,Tt[1]+oy);ctx.scale(1/(1+a.v.squash),1+a.v.squash);ctx.beginPath();ctx.arc(0,0,.13,0,TAU);ctx.fill();ctx.restore();
+}
+function eye(a,side,blink){
+  const g=k=>a.v[k+(side<0?'L':'R')],v=a.v;
+  const RF=.8,bx=(side*.28*v.spacing+v.gx*.16)/RF,by=v.gy*.16/RF,bz=Math.sqrt(Math.max(.02,1-bx*bx-by*by));
+  const p=rot(a,bx,by,bz);if(p[2]<=.02)return;p[0]*=RF;p[1]*=RF;
+  const rx=.28*v.spacing/RF,rest=Math.sqrt(1-rx*rx),f=Math.min(1.04,p[2]/rest),phi=Math.atan2(p[1],p[0]);
+  ctx.save();ctx.translate(p[0]*v.fs,p[1]*v.fs+v.fy);
+  ctx.rotate(phi);ctx.scale(f,1);ctx.rotate(-phi);
+  ctx.scale(v.fs,v.fs*v.fsy);ctx.rotate(side*g('tilt'));
+  const sm=clamp(abs(a.vel.gx)*.012+abs(a.vel.gy)*.006,0,.22);ctx.scale(1+sm,1-sm*.5);
+  const sc=Math.max(.2,g('escale')),A=g('w')/2*sc,b0=g('h')/2*sc*Math.max(0,g('open')),b=b0*(1-blink),shiftY=blink*b0*.28;
+  const ah=(g('w')/2+.045)*sc,hp=clamp(g('happy'),0,1),arch=g('arch'),thick=g('thick');
+  const rc=Math.min(A,Math.max(b,1e-4))*clamp(g('round'),0,1);
+  const lt0=g('lidTop'),sl=g('slant'),ct=g('curveTop'),lb0=g('lidBot'),slb=g('slantBot'),cb=g('curveBot');
+  const K=26,top=[],bot=[];
+  for(let j=0;j<=K;j++){
+    const u=-C(Math.PI*j/K),x=u*A,ax=abs(x),q=1-u*u;
+    let env;if(ax<=A-rc)env=b;else{const d=ax-(A-rc);env=b-rc+Math.sqrt(Math.max(0,rc*rc-d*d));}
+    const inner=-side*u;
+    const qq=1-.62*u*u,lt=-b+lt0*2*b+sl*inner*b+ct*qq*b,lb=b-lb0*2*b+slb*inner*b-cb*qq*b;
+    let t1=Math.max(-env,lt),b1=Math.min(env,lb);
+    const minT=.045*sc*Math.sqrt(q);
+    if(b1-t1<minT){const m=clamp((t1+b1)/2,-env,env);t1=m-minT/2;b1=m+minT/2;}
+    const yc=arch*(.33-q)*sc+blink*.02,ht=thick*.5*sc*Math.pow(q,.18)*(1-blink*.55);
+    const X=mix(x,u*ah,hp);
+    top.push([X,mix(t1+shiftY,yc-ht,hp)]);bot.push([X,mix(b1+shiftY,yc+ht,hp)]);
+  }
+  ctx.beginPath();ctx.moveTo(top[0][0],top[0][1]);
+  for(let j=1;j<=K;j++)ctx.lineTo(top[j][0],top[j][1]);
+  for(let j=K;j>=0;j--)ctx.lineTo(bot[j][0],bot[j][1]);
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+function render(){
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
+  avatars.forEach((a,i)=>{
+    const v=a.v,cx=(i%cols+.5)*cw,cy=(Math.floor(i/cols)+.6)*ch;a.cx=cx;a.cy=cy;
+    const blink=paused?0:blinkAmount(a);
+    ctx.save();ctx.translate(cx+v.bx*rad,cy+(v.by+a.jy)*rad);ctx.rotate(v.roll);
+    const sq=v.squash,sx=(1+sq)*v.scale,sy=v.scale/(1+sq);
+    ctx.translate(0,rad);ctx.scale(sx*rad,sy*rad);ctx.translate(0,-1);
+    ctx.fillStyle=a.color;ctx.strokeStyle=a.color;
+    antenna(a,-1);antenna(a,1);
+    bodyPath(a);ctx.fill();
+    ctx.save();bodyPath(a);ctx.clip();ctx.fillStyle='#fff';
+    eye(a,-1,blink);eye(a,1,blink);
+    ctx.restore();ctx.restore();
+  });
+}
+
+/* ---------- UI ---------- */
+const emoWrap=root.querySelector('.bee-emotions'),shapeWrap=root.querySelector('.bee-shapes'),status=root.querySelector('.bee-status');
+ORDER.forEach(id=>{const b=document.createElement('button');b.type='button';b.dataset.emo=id;b.textContent=P[id].label;b.setAttribute('aria-pressed','false');emoWrap.appendChild(b);});
+[['','Följ känslan'],...Object.keys(SHAPES).map(k=>[k,SHAPES[k].label])].forEach(([k,l])=>{const b=document.createElement('button');b.type='button';b.dataset.shape=k;b.textContent=l;b.setAttribute('aria-pressed',String(k===''));shapeWrap.appendChild(b);});
+const pause=root.querySelector('.bee-pause');
+function updateStatus(){
+  const name=mode==='auto'?'Automatiskt – byter känslor och rörelser':P[mode].label;
+  const sh=shapeOverride?' · form: '+SHAPES[shapeOverride].label:'';
+  status.textContent=(paused?'Pausad · ':'')+name+sh;
+  canvas.setAttribute('aria-label','Sex runda Beeable-avatarer på vit bakgrund som visar: '+name+sh+'.');
+}
+const updatePause=()=>{pause.textContent=paused?'Spela':'Pausa';pause.setAttribute('aria-pressed',String(paused));updateStatus();};
+function settle(){avatars.forEach(a=>{a.jy=0;a.air=false;a.jv=0;for(let n=0;n<120;n++)step(a,1/60,false);});render();}
+root.querySelectorAll('[data-emo]').forEach(btn=>btn.addEventListener('click',()=>{
+  mode=btn.dataset.emo;root.querySelectorAll('[data-emo]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+  avatars.forEach(a=>{if(mode==='auto'){a.auto.until=a.t+Math.random()*1.5;}else startSegment(a);});
+  updateStatus();if(paused)settle();
+}));
+shapeWrap.querySelectorAll('[data-shape]').forEach(btn=>btn.addEventListener('click',()=>{
+  shapeOverride=btn.dataset.shape||null;shapeWrap.querySelectorAll('[data-shape]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+  updateStatus();if(paused)settle();
+}));
+root.querySelectorAll('[data-gaze]').forEach(btn=>btn.addEventListener('click',()=>{
+  const on=btn.getAttribute('aria-pressed')!=='true';gazeOverride=on?DIRS[btn.dataset.gaze]:null;
+  root.querySelectorAll('[data-gaze]').forEach(b=>b.setAttribute('aria-pressed',String(on&&b===btn)));
+  if(paused)settle();
+}));
+root.querySelectorAll('[data-fine]').forEach(inp=>inp.addEventListener('input',()=>{fine[inp.dataset.fine]=parseFloat(inp.value);if(paused)settle();}));
+root.querySelector('.bee-reset').addEventListener('click',()=>{root.querySelectorAll('[data-fine]').forEach(inp=>{inp.value=inp.dataset.fine==='open'||inp.dataset.fine==='tempo'?1:0;fine[inp.dataset.fine]=parseFloat(inp.value);});if(paused)settle();});
+pause.addEventListener('click',()=>{paused=!paused;updatePause();});
+reduceQ.addEventListener?.('change',e=>{if(e.matches&&!paused){paused=true;updatePause();settle();}});
+canvas.addEventListener('pointermove',e=>{const b=canvas.getBoundingClientRect();pointer={x:(e.clientX-b.left)/b.width*w,y:(e.clientY-b.top)/b.height*h};});
+canvas.addEventListener('pointerleave',()=>{pointer=null;});
+function resize(){
+  w=Math.max(280,root.clientWidth-24);cols=w<480?2:3;cw=w/cols;ch=cw*1.08;h=Math.ceil(6/cols)*ch;rad=Math.min(cw*.3,ch*.28);
+  const d=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);canvas.style.height=h+'px';
+  ctx.setTransform(d,0,0,d,0,0);render();
+}
+let last=0;
+function frame(now){
+  const dt=last?Math.min((now-last)/1000,.05):0;last=now;
+  if(!paused&&dt>0){const sdt=dt*fine.tempo,n=Math.ceil(sdt/(1/120));avatars.forEach(a=>{for(let k=0;k<n;k++)step(a,sdt/n,true);});render();}
+  requestAnimationFrame(frame);
+}
+new ResizeObserver(resize).observe(root);
+updatePause();resize();if(paused)settle();requestAnimationFrame(frame);
+})();
+</script>
+</body></html>
