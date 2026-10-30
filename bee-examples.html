@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beeable – mer bi, kvar på platsen</title>
+<style>
+#bee-ex{background:#fff;color:#24231f;font:14px/1.45 system-ui,sans-serif;color-scheme:light;max-width:1040px;margin:0 auto;padding:22px 16px 40px}
+#bee-ex h1{font-size:22px;font-weight:650;margin:0 0 4px;text-align:center;letter-spacing:-.01em}
+#bee-ex .lead{text-align:center;color:#6f6a60;margin:0 auto 14px;max-width:640px}
+#bee-ex .bar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 18px}
+#bee-ex .pill{font:inherit;color:#47443c;background:#fff;border:1px solid #e6e2da;border-radius:22px;padding:8px 14px;min-height:40px;cursor:pointer}
+#bee-ex .pill[aria-pressed="true"]{background:#24231f;color:#fff;border-color:#24231f}
+#bee-ex button:focus-visible{outline:3px solid #dda63d;outline-offset:3px}
+#bee-ex .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+#bee-ex .card{margin:0;border:1px solid #efece6;border-radius:18px;padding:6px 14px 14px;display:flex;flex-direction:column}
+#bee-ex .stage{position:relative;height:210px}
+#bee-ex .stage canvas,#bee-ex .stage .hit{display:block;width:100%;height:100%}
+#bee-ex .stage .hit{padding:0;border:0;background:none;border-radius:14px;cursor:pointer}
+#bee-ex .card h2{font-size:15px;font-weight:650;margin:4px 0 2px}
+#bee-ex .card h2 span{color:#b38428;margin-right:6px}
+#bee-ex .card p{margin:0;color:#6f6a60;font-size:13px}
+#bee-ex .card .pill{align-self:flex-start;margin-top:10px;min-height:32px;padding:4px 12px;font-size:13px}
+#bee-ex .demo{margin-top:28px;border:1px solid #efece6;border-radius:18px;padding:16px 14px 18px;text-align:center}
+#bee-ex .demo h2{font-size:17px;margin:0 0 2px}
+#bee-ex .demo p{margin:0 auto;color:#6f6a60;font-size:13px;max-width:620px}
+#bee-ex .btnrow{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 18px;margin:14px 0 6px}
+#bee-ex .bee-btn{font:inherit;color:#47443c;background:none;border:0;border-radius:18px;padding:2px 4px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#bee-ex .bee-btn canvas{display:block;width:118px;height:124px;pointer-events:none}
+#bee-ex .bee-btn span{font-size:13px;margin-top:-2px}
+#bee-ex .status{min-height:1.4em;color:#8a857a;font-size:13px;margin:4px 0 0}
+#bee-ex .note{color:#8a857a;font-size:12px;text-align:center;margin:18px 0 0}
+</style>
+</head><body style="margin:0;background:#fff">
+<main id="bee-ex">
+  <h1>Beeable – mer bi, kvar på platsen</h1>
+  <p class="lead">Sex sätt att få bottarna att kännas mer som bin utan att de lämnar sin plats. All rörelse håller sig inom några procent av bottens storlek, så att de fungerar som knappar.</p>
+  <div class="bar" role="group" aria-label="Visning">
+    <button type="button" class="pill js-pause" aria-pressed="false">Pausa</button>
+    <button type="button" class="pill js-stripes-all" aria-pressed="false">Ränder på alla</button>
+  </div>
+
+  <section class="cards" aria-label="Exempel">
+    <figure class="card" data-scene="surr">
+      <div class="stage"><canvas role="img" aria-label="En gul Beeable som surrar i korta stötar."></canvas></div>
+      <figcaption><h2><span>1</span>Surr</h2><p>Snabba, små darrningar i kropp och kontur i korta stötar – som vingar i rörelse.</p></figcaption>
+    </figure>
+    <figure class="card" data-scene="svava">
+      <div class="stage"><canvas role="img" aria-label="En blå Beeable som svävar på stället med lätt lutning."></canvas></div>
+      <figcaption><h2><span>2</span>Sväva på stället</h2><p>Mjuk gungning med liten oregelbunden drift och lätt lutning, som om vingarna bär den.</p></figcaption>
+    </figure>
+    <figure class="card" data-scene="vick">
+      <div class="stage"><canvas role="img" aria-label="En grön Beeable som gör en vickdans på stället."></canvas></div>
+      <figcaption><h2><span>3</span>Vickdans</h2><p>Snabb vickning från sida till sida med piskande antenner, sedan en liten vridslinga tillbaka.</p></figcaption>
+    </figure>
+    <figure class="card" data-scene="rander">
+      <div class="stage"><canvas role="img" aria-label="Tre Beeable med mjuka ränder som följer kroppens rörelse."></canvas></div>
+      <figcaption><h2><span>4</span>Ränder</h2><p>Två–tre mjuka, mörkare band som följer form, tryck och vridning. Ett tillval.</p></figcaption>
+      <button type="button" class="pill js-stripes-card" aria-pressed="true">Ränder: på</button>
+    </figure>
+    <figure class="card" data-scene="kaka">
+      <div class="stage"><canvas role="img" aria-label="Tre Beeable som pulserar till sexkanter som celler i en vaxkaka."></canvas></div>
+      <figcaption><h2><span>5</span>Honungskaka</h2><p>Tre bottar pulserar till sexkanter som linjerar som celler i en vaxkaka – och tillbaka.</p></figcaption>
+    </figure>
+    <figure class="card" data-scene="landar">
+      <div class="stage"><button type="button" class="hit" aria-label="Landa – tryck för att spela landningen igen"><canvas aria-hidden="true"></canvas></button></div>
+      <figcaption><h2><span>6</span>Landar</h2><p>Ett litet lyft, mjuk landning, antennerna knackar och ögonen blir glada. Tryck för att spela igen.</p></figcaption>
+    </figure>
+  </section>
+
+  <section class="demo" aria-labelledby="demo-h">
+    <h2 id="demo-h">Knapp-demo</h2>
+    <p>Vila: svävar på stället. Hovra eller fokusera: surrar och piggnar till. Tryck: trycks ihop och landar.</p>
+    <div class="btnrow" data-scene="knappar">
+      <button type="button" class="bee-btn"><canvas aria-hidden="true"></canvas><span>Hem</span></button>
+      <button type="button" class="bee-btn"><canvas aria-hidden="true"></canvas><span>Sök</span></button>
+      <button type="button" class="bee-btn"><canvas aria-hidden="true"></canvas><span>Meddelanden</span></button>
+      <button type="button" class="bee-btn"><canvas aria-hidden="true"></canvas><span>Profil</span></button>
+    </div>
+    <p class="status" aria-live="polite"></p>
+  </section>
+  <p class="note">Respekterar ”minska rörelse”: då visas stillbilder tills du trycker på Spela.</p>
+</main>
+<script>
+(()=>{
+'use strict';
+const root=document.getElementById('bee-ex');
+const palette=['#DDA63D','#7294B6','#7C9F88','#C9877D','#A08BAD','#689E9E'];
+const TAU=Math.PI*2,N=96,S=Math.sin,C=Math.cos,abs=Math.abs;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,mix=(a,b,t)=>a+(b-a)*t,mod=(x,m)=>((x%m)+m)%m;
+const ss=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+const win=(u,a,b,e=.12)=>ss(a-e,a,u)*(1-ss(b,b+e,u));
+const o=(t,f,ph=0)=>S(t*TAU*f+ph);
+const hash=k=>{const x=S(k*127.1+311.7)*43758.5453;return x-Math.floor(x);};
+const gauss=()=>{let s=0;for(let i=0;i<4;i++)s+=Math.random();return (s-2)/.58;};
+const reduceQ=window.matchMedia('(prefers-reduced-motion: reduce)');
+let ctx=null;
+
+/* ---------- Former (samma som originalet, plus spetsig sexkant för vaxkakan) ---------- */
+const fromFn=f=>{const a=new Float32Array(N);for(let i=0;i<N;i++)a[i]=f(i/N*TAU);return a;};
+const HEXR=1.06;
+const SHAPES={
+  circle:{face:[0,1,1],r:fromFn(()=>1)},
+  hexP:{face:[0,.97,1],r:fromFn(th=>HEXR*C(Math.PI/6)/C(mod(th-Math.PI/6,Math.PI/3)-Math.PI/6))}
+};
+
+/* ---------- Parametrar och fjädrar (från originalet) ---------- */
+const BODYK=['bx','by','roll','yaw','pitch','scale','squash','fy','fs','fsy','spacing','gx','gy','lean'];
+const EYEK=['open','w','h','round','lidTop','slant','curveTop','lidBot','slantBot','curveBot','happy','arch','thick','tilt','escale'];
+const ANTK=['splay','bend','len','fwd'];
+const BASE={bx:0,by:0,roll:0,yaw:0,pitch:0,scale:1,squash:0,spacing:1,gx:0,gy:0,lean:0,
+  open:1,w:.29,h:.64,round:1,lidTop:0,slant:0,curveTop:0,lidBot:0,slantBot:0,curveBot:0,happy:0,arch:.12,thick:.125,tilt:0,escale:1,
+  splay:.62,bend:.35,len:.67,fwd:0,shape:'circle',dart:.08,dartRate:1,blinkRate:.22,blinkStyle:'normal',
+  buzz:0,ox:0,oy:0,froll:0,alean:0,aout:0,afwd:0};
+const KEYS=[...BODYK];EYEK.forEach(k=>KEYS.push(k+'L',k+'R'));ANTK.forEach(k=>KEYS.push(k+'L',k+'R'));
+const SPR={bx:[160,15],by:[160,15],roll:[120,13],yaw:[110,15],pitch:[110,15],scale:[170,12],squash:[260,11],
+  fy:[120,18],fs:[120,18],fsy:[120,18],spacing:[150,18],gx:[520,32],gy:[520,32],lean:[100,6.5]};
+const springOf=k=>{if(SPR[k])return SPR[k];const b=k.slice(0,-1);
+  if(b==='escale')return [320,15];if(b==='open')return [420,30];if(b==='happy')return [220,22];
+  if(ANTK.includes(b))return [105,6.5];return [280,24];};
+
+let paused=reduceQ.matches,stripesAll=false;
+
+function makeBot(color,scene,i){
+  const seed=hash(i*7.3+scene.idx*13.1);
+  const b={i,color,scene,seed,t:0,t0:0,v:{},vel:{},sr:new Float32Array(N).fill(1),sv:new Float32Array(N),rr:new Float32Array(N),
+    prevX:0,prevY:0,pvx:0,pvy:0,pyawv:0,stepped:false,cx:0,cy:0,rad:40,
+    blink:{on:false,start:0,dur:.17,hold:0,next:1+seed*3,type:'normal',dbl:false},
+    sac:{x:0,y:0,ax:0,ay:0,until:0,next:0},
+    fx:{buzz:0,ox:0,oy:0,froll:0,alean:0,aout:0,afwd:0,stripes:0},st:{hover:false,press:false,hoverT:-9,relT:-9,pressT:-9},prevU:0};
+  KEYS.forEach(k=>{const base=k.replace(/[LR]$/,'');b.v[k]=k in BASE?BASE[k]:(base in BASE&&!BODYK.includes(k)?BASE[base]:0);b.vel[k]=0;});
+  b.v.fs=1;b.v.fsy=1;b.v.fy=0;
+  return b;
+}
+
+/* ---------- Blinkningar (från originalet) ---------- */
+function blinkAmount(a){
+  const B=a.blink;if(!B.on)return 0;
+  const tau=a.t-B.start,cl=B.dur*.38,op=B.dur*.62;
+  if(tau<cl)return ss(0,cl,tau);if(tau<cl+B.hold)return 1;return 1-ss(cl+B.hold,cl+B.hold+op,tau);
+}
+function updateBlink(a,R){
+  const B=a.blink;
+  if(!B.on&&a.t>=B.next&&R.blinkRate>0){B.on=true;B.start=a.t;B.type=R.blinkStyle;
+    B.dur={normal:.17,slow:.5}[B.type]||.17;B.hold=B.type==='slow'?.08:0;
+    if(B.type==='normal'&&!B.dbl&&Math.random()<.2)B.dbl=true;}
+  if(B.on&&a.t-B.start>B.dur+B.hold){B.on=false;
+    if(B.dbl){B.dbl=false;B.next=a.t+.08;}
+    else B.next=a.t+(R.blinkRate>0?(-Math.log(1-Math.random())/R.blinkRate)+.25:1e9);}
+}
+
+/* ---------- Kick: landningsstöt i kropp och kontur ---------- */
+function kick(b,amt){b.vel.squash+=amt;for(let i=0;i<N;i++)b.sv[i]+=amt*.22*C(2*i/N*TAU);}
+
+/* ---------- Ett simuleringssteg ---------- */
+function step(b,dt,advance){
+  if(advance)b.t+=dt;
+  const q=Object.assign({},BASE,b.scene.drive(b,b.t-b.t0,advance));
+  const T={};
+  BODYK.forEach(k=>T[k]=q[k]);
+  EYEK.forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
+  ANTK.forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
+  const shape=q.shape,amt=q.shapeAmt??(shape==='circle'?0:1),sf=SHAPES[shape].face;
+  T.fy=mix(0,sf[0],amt);T.fs=mix(1,sf[1],amt);T.fsy=mix(1,sf[2],amt);
+  if(advance){
+    updateBlink(b,q);
+    const Sc=b.sac;
+    if(b.t>=Sc.next){const nx=gauss()*q.dart,ny=gauss()*q.dart*.6;Sc.ax=Sc.x-(nx-Sc.x)*.35;Sc.ay=Sc.y-(ny-Sc.y)*.35;Sc.until=b.t+.05;
+      Sc.x=nx;Sc.y=ny;Sc.next=b.t+(.3+Math.random()*1.3)/Math.max(.2,q.dartRate);}
+    const pre=b.t<Sc.until;T.gx+=(pre?Sc.ax:Sc.x)+.02*S(b.t*4.7+b.seed*9);T.gy+=(pre?Sc.ay:Sc.y)+.015*S(b.t*3.9+b.seed*4);
+  }
+  KEYS.forEach(k=>{const [K,D]=springOf(k);let w=b.vel[k];w+=(K*(T[k]-b.v[k])-D*w)*dt;b.vel[k]=w;b.v[k]+=w*dt;});
+  const sh=SHAPES[shape];
+  for(let i=0;i<N;i++){const tr=1+(sh.r[i]-1)*amt;b.sv[i]+=(150*(tr-b.sr[i])-11*b.sv[i])*dt;b.sr[i]+=b.sv[i]*dt;}
+  // antennernas eftersläp när kroppen rör sig (från originalet)
+  const X=b.v.bx,Y=b.v.by,vx=(X-b.prevX)/dt,vy=(Y-b.prevY)/dt,yv=b.vel.yaw;
+  if(b.stepped){const dvx=clamp(vx-b.pvx,-6,6),dvy=clamp(vy-b.pvy,-6,6),dyw=clamp(yv-b.pyawv,-6,6);
+    b.vel.splayL+=-dvy*.8;b.vel.splayR+=-dvy*.8;b.vel.bendL+=-dvy*.4;b.vel.bendR+=-dvy*.4;b.vel.lean+=-dvx*1.1-dyw*.25;}
+  b.prevX=X;b.prevY=Y;b.pvx=vx;b.pvy=vy;b.pyawv=yv;b.stepped=true;
+  b.v.squash=Math.max(-.35,b.v.squash);
+  const f=b.fx,k=Math.min(1,dt*28);
+  f.buzz+=(q.buzz-f.buzz)*k;
+  f.ox=q.ox;f.oy=q.oy;f.froll=q.froll;f.alean=q.alean;f.aout=q.aout;f.afwd=q.afwd;
+  const sOn=b.scene.stripes!=null?(b.scene.stripes||stripesAll):stripesAll;
+  f.stripes+=((sOn?1:0)-f.stripes)*Math.min(1,dt*6);
+}
+
+/* ---------- Ritning (från originalet, plus surr, ränder och direkta förskjutningar) ---------- */
+function rot(a,x,y,z){const cy=C(a.v.yaw),sy=S(a.v.yaw),cp=C(a.v.pitch),sp=S(a.v.pitch);
+  const y1=y*cp-z*sp,z1=y*sp+z*cp;return [x*cy+z1*sy,y1,-x*sy+z1*cy];}
+function rShape(a,ang){const f=mod(ang,TAU)/TAU*N,i=Math.floor(f)%N,j=(i+1)%N,u=f-Math.floor(f);return mix(a.rr[i],a.rr[j],u);}
+function bodyPath(a){
+  const r=a.rr,pts=[];for(let i=0;i<N;i++){const th=i/N*TAU;pts.push([r[i]*C(th),r[i]*S(th)]);}
+  ctx.beginPath();const m=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];let s=m(pts[N-1],pts[0]);ctx.moveTo(s[0],s[1]);
+  for(let i=0;i<N;i++){const p=pts[i],q=m(p,pts[(i+1)%N]);ctx.quadraticCurveTo(p[0],p[1],q[0],q[1]);}
+  ctx.closePath();
+}
+function antenna(a,side,jit){
+  const g=k=>a.v[k+(side<0?'L':'R')],f=a.fx;
+  const A=side*(g('splay')+f.aout)+a.v.lean+f.alean+jit,B=side*g('bend'),L=g('len'),F=g('fwd')+f.afwd;
+  const r0=[side*.43,-.85,.305],dir=(th,ff)=>[S(th)*C(ff),-C(th)*C(ff),S(ff)];
+  const d1=dir(A-B,F*.6),d2=dir(A,F);
+  const c3=[r0[0]+L*.49*d1[0],r0[1]+L*.49*d1[1],r0[2]+L*.49*d1[2]],t3=[r0[0]+L*d2[0],r0[1]+L*d2[1],r0[2]+L*d2[2]];
+  const R=rot(a,...r0),Cc=rot(a,...c3),Tt=rot(a,...t3);
+  const k=rShape(a,Math.atan2(R[1],R[0]))-1,ox=R[0]*k,oy=R[1]*k;
+  ctx.lineWidth=.085;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(R[0]+ox,R[1]+oy);ctx.quadraticCurveTo(Cc[0]+ox,Cc[1]+oy,Tt[0]+ox,Tt[1]+oy);ctx.stroke();
+  ctx.save();ctx.translate(Tt[0]+ox,Tt[1]+oy);ctx.scale(1/(1+a.v.squash),1+a.v.squash);ctx.beginPath();ctx.arc(0,0,.13,0,TAU);ctx.fill();ctx.restore();
+}
+// Latitudband på klotet: roteras med yaw/pitch, mappas på kroppsformen och följer squash via kroppens transform
+const BANDS=[[-.66,-.55],[.4,.54],[.68,.82]],TILT=.09;
+function latPoint(a,y,phi){
+  const r=Math.sqrt(Math.max(0,1-y*y));let x=r*S(phi),yy=y,z=r*C(phi);
+  const xt=x*C(TILT)-yy*S(TILT);yy=x*S(TILT)+yy*C(TILT);x=xt;
+  return rot(a,x,yy,z);
+}
+function stripes(a,amt){
+  if(amt<.01)return;
+  ctx.save();ctx.fillStyle='rgba(36,35,31,'+(.15*amt).toFixed(3)+')';
+  const phiC=Math.atan2(-S(a.v.yaw),C(a.v.pitch)*C(a.v.yaw)),K=64;
+  for(const [y1,y2] of BANDS){
+    const edge=y=>{const out=[];for(let k=0;k<=K;k++){const p=latPoint(a,y,phiC-Math.PI+k/K*TAU);
+      if(p[2]>-.04){const s=rShape(a,Math.atan2(p[1],p[0]));out.push([p[0]*s,p[1]*s]);}}return out;};
+    const e1=edge(y1),e2=edge(y2);if(e1.length<2&&e2.length<2)continue;
+    ctx.beginPath();const all=e1.concat(e2.reverse());ctx.moveTo(all[0][0],all[0][1]);for(const p of all)ctx.lineTo(p[0],p[1]);ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+}
+function eye(a,side,blink){
+  const g=k=>a.v[k+(side<0?'L':'R')],v=a.v;
+  const RF=.8,bx=(side*.28*v.spacing+v.gx*.16)/RF,by=v.gy*.16/RF,bz=Math.sqrt(Math.max(.02,1-bx*bx-by*by));
+  const p=rot(a,bx,by,bz);if(p[2]<=.02)return;p[0]*=RF;p[1]*=RF;
+  const rx=.28*v.spacing/RF,rest=Math.sqrt(1-rx*rx),f=Math.min(1.04,p[2]/rest),phi=Math.atan2(p[1],p[0]);
+  ctx.save();ctx.translate(p[0]*v.fs,p[1]*v.fs+v.fy);
+  ctx.rotate(phi);ctx.scale(f,1);ctx.rotate(-phi);
+  ctx.scale(v.fs,v.fs*v.fsy);ctx.rotate(side*g('tilt'));
+  const sm=clamp(abs(a.vel.gx)*.012+abs(a.vel.gy)*.006,0,.22);ctx.scale(1+sm,1-sm*.5);
+  const sc=Math.max(.2,g('escale')),A=g('w')/2*sc,b0=g('h')/2*sc*Math.max(0,g('open')),b=b0*(1-blink),shiftY=blink*b0*.28;
+  const ah=(g('w')/2+.045)*sc,hp=clamp(g('happy'),0,1),arch=g('arch'),thick=g('thick');
+  const rc=Math.min(A,Math.max(b,1e-4))*clamp(g('round'),0,1);
+  const lt0=g('lidTop'),sl=g('slant'),ct=g('curveTop'),lb0=g('lidBot'),slb=g('slantBot'),cb=g('curveBot');
+  const K=26,top=[],bot=[];
+  for(let j=0;j<=K;j++){
+    const u=-C(Math.PI*j/K),x=u*A,ax=abs(x),q=1-u*u;
+    let env;if(ax<=A-rc)env=b;else{const d=ax-(A-rc);env=b-rc+Math.sqrt(Math.max(0,rc*rc-d*d));}
+    const inner=-side*u;
+    const qq=1-.62*u*u,lt=-b+lt0*2*b+sl*inner*b+ct*qq*b,lb=b-lb0*2*b+slb*inner*b-cb*qq*b;
+    let t1=Math.max(-env,lt),b1=Math.min(env,lb);
+    const minT=.045*sc*Math.sqrt(q);
+    if(b1-t1<minT){const m=clamp((t1+b1)/2,-env,env);t1=m-minT/2;b1=m+minT/2;}
+    const yc=arch*(.33-q)*sc+blink*.02,ht=thick*.5*sc*Math.pow(q,.18)*(1-blink*.55);
+    const X=mix(x,u*ah,hp);
+    top.push([X,mix(t1+shiftY,yc-ht,hp)]);bot.push([X,mix(b1+shiftY,yc+ht,hp)]);
+  }
+  ctx.beginPath();ctx.moveTo(top[0][0],top[0][1]);
+  for(let j=1;j<=K;j++)ctx.lineTo(top[j][0],top[j][1]);
+  for(let j=K;j>=0;j--)ctx.lineTo(bot[j][0],bot[j][1]);
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+const STATS={};
+function drawBot(b){
+  const v=b.v,f=b.fx,rad=b.rad,stillMode=paused;
+  // Surr: snabb, liten slumpdarrning per bildruta i position, vinkel, kontur och antenner
+  const bz=stillMode?0:f.buzz,rn=()=>Math.random()*2-1;
+  const jx=bz*.022*rn(),jy=bz*.016*rn(),jr=bz*.03*rn(),p1=Math.random()*TAU,p2=Math.random()*TAU;
+  for(let i=0;i<N;i++){const th=i/N*TAU;b.rr[i]=b.sr[i]*(1+bz*(.012*S(5*th+p1)+.008*S(9*th+p2)));}
+  const blink=stillMode?0:blinkAmount(b);
+  const sq=v.squash,sx=(1+sq)*v.scale,sy=v.scale/(1+sq);
+  const dx=v.bx+f.ox+jx,dy=v.by+f.oy+jy; // ankarpunktens förflyttning i radier
+  const st=STATS[b.scene.id]||(STATS[b.scene.id]={dx:0,dy:0});
+  if(b.t>1){st.dx=Math.max(st.dx,abs(dx));st.dy=Math.max(st.dy,abs(dy));}
+  ctx.save();ctx.translate(b.cx+(v.bx+f.ox+jx)*rad,b.cy+(v.by+f.oy+jy)*rad);ctx.rotate(v.roll+f.froll+jr);
+  ctx.translate(0,rad);ctx.scale(sx*rad,sy*rad);ctx.translate(0,-1);
+  ctx.fillStyle=b.color;ctx.strokeStyle=b.color;
+  antenna(b,-1,bz*.09*rn());antenna(b,1,bz*.09*rn());
+  bodyPath(b);ctx.fill();
+  ctx.save();bodyPath(b);ctx.clip();
+  stripes(b,f.stripes);
+  ctx.fillStyle='#fff';eye(b,-1,blink);eye(b,1,blink);
+  ctx.restore();ctx.restore();
+}
+
+/* ---------- Scener ---------- */
+const scenes=[];
+function idleHover(b,t,s=1){ // gemensam svävning: gungning + oregelbunden drift + lutning
+  const ph=b.seed*TAU;
+  const bx=s*(.012*o(t,.31,ph)+.006*o(t,.73,ph*2));
+  return {by:s*(.026*o(t,1.05,ph)+.007*o(t,2.6,ph+1)),bx,
+    roll:s*(.055*o(t,.31,ph+1.1)+.018*o(t,1.05,ph+.4)),pitch:.07+s*.03*o(t,1.05,ph+1.6),
+    squash:s*.016*o(t,1.05,ph-1.2),splay:.6+s*.05*o(t,1.05,ph+2.4),bend:.35+s*.06*o(t,.8,ph)};
+}
+const DRIVERS={
+  surr(b,t){const u=mod(t,2.8),bz=win(u,.5,1.15,.05)+.8*win(u,1.55,1.85,.04),e=Math.min(1,bz);
+    return {...idleHover(b,t,.35),buzz:bz,escale:1+.07*e,w:.29+.015*e,pitch:.05+.07*e,splay:.62-.16*e,len:.67+.05*e,
+      by:-.015*e+.008*o(t,.5),dart:.04,blinkRate:.18};},
+  svava(b,t){return {...idleHover(b,t,1),buzz:.22,dart:.08,blinkRate:.22};},
+  vick(b,t){const P=4.8,u=mod(t,P),dir=u<P/2?1:-1,w=mod(u,P/2);
+    const wag=win(w,.1,1.35,.1),ph=TAU*6.5*w,ls=clamp((w-1.45)/.85,0,1),lw=win(w,1.45,2.3,.08);
+    return {ox:.03*wag*S(ph),froll:.13*wag*S(ph),alean:-.42*wag*S(ph-1.1),aout:.08*wag*abs(S(ph)),
+      bx:dir*.03*S(TAU*ls)*lw,by:-.03*(1-C(TAU*ls))/2*lw,yaw:dir*.45*S(Math.PI*ls)*lw,roll:dir*.08*S(TAU*ls)*lw,
+      gx:dir*.5*lw,lidBot:.12*wag,curveBot:.08*wag,escale:1+.04*wag,pitch:.06,buzz:.35*wag,dart:.03,blinkRate:.15};},
+  rander(b,t){const ph=b.i*1.9+b.seed;
+    return {...idleHover(b,t,.4),yaw:.5*o(t,.16,ph),pitch:.05+.28*o(t,.11,ph+1),squash:.07*o(t,.45,ph)+.06*Math.max(0,o(t,.23,ph))**8,
+      dart:.06,blinkRate:.2};},
+  kaka(b,t){const u=mod(t,4.6),hx=win(u,.9,3.2,.35),beat=Math.exp(-(((mod(u-1.6-b.i*.16,.9)-.0)/.07)**2))*win(u,1.4,3.0,.1);
+    const id=idleHover(b,t,.5*(1-hx));
+    return {...id,shape:'hexP',shapeAmt:hx,yaw:(1-hx)*.3*o(t,.12,b.i*2),pitch:id.pitch*(1-hx),roll:id.roll*(1-hx),squash:id.squash*(1-hx),
+      scale:1+.035*hx+.03*beat,happy:hx,arch:.13,escale:1+.05*hx,splay:.62-.12*hx,dart:.06*(1-hx),blinkRate:.18};},
+  landar(b,t,adv){const u=mod(t,3.8),lift=win(u,.05,.55,.14),tap=win(u,.85,1.6,.05),hp=win(u,.9,3.1,.2);
+    if(adv&&b.prevU<.6&&u>=.6)kick(b,2.3);b.prevU=u;
+    const tw=Math.max(0,S(TAU*3.4*(u-.85)))*tap;
+    return {...idleHover(b,t,.15*(1-lift)),by:-.075*lift+.015*win(u,.6,.8,.06),squash:-.05*lift,pitch:.1*lift,gy:.45*lift,
+      buzz:.55*lift,afwd:.55*tw,aout:-.18*tw,bend:.35+.25*tw,happy:hp,arch:.13,w:.3,escale:1+.05*hp,dart:.04,blinkRate:hp>.5?0:.2};},
+  knappar(b,t,adv){const S0=b.st,now=b.t;
+    const h=S0.hover?1:0,p=S0.press?1:0,sinceH=now-S0.hoverT,sinceR=now-S0.relT;
+    if(adv&&S0.kickPending){kick(b,2);S0.kickPending=false;}
+    const tap=win(sinceR,.05,.75,.05),tw=Math.max(0,S(TAU*3.4*sinceR))*tap,hp=win(sinceR,.05,1.4,.2);
+    const id=idleHover(b,t,.75*(1-.6*h)*(1-p));
+    const bz=h*(1-p)*(win(sinceH,0,.55,.05)+.35*(.5+.5*o(sinceH,1.4)));
+    return {...id,buzz:paused?0:bz,scale:1+.06*h-.05*p,pitch:id.pitch+.1*h-.08*p,by:id.by-.035*h+.03*p,squash:id.squash+.12*p,
+      splay:mix(.6,.4,h)+.35*p,len:.67+.08*h,bend:.35-.12*h+.25*tw,escale:1+.1*h-.06*p,w:.29+.02*h,open:1-.25*p,
+      afwd:.55*tw,aout:-.18*tw,happy:Math.max(hp,0),arch:.13,dart:.06*(1-h),blinkRate:.2};}
+};
+function setupScene(el,id,idx){
+  const canvases=[...el.querySelectorAll('canvas')];
+  const sc={id,idx,el,canvases,bots:[],drive:DRIVERS[id],stripes:id==='rander'?true:null};
+  const cols={surr:[0],svava:[1],vick:[2],rander:[0,1,3],kaka:[0,2,4],landar:[3],knappar:[0,1,2,3]}[id];
+  cols.forEach((c,i)=>{const b=makeBot(palette[c],sc,i);b.t0=-(i*.17);sc.bots.push(b);});
+  if(id==='landar')sc.bots[0].color=palette[5];
+  scenes.push(sc);
+  canvases.forEach(cv=>new ResizeObserver(()=>layout(sc)).observe(cv));
+  return sc;
+}
+function layout(sc){
+  const d=Math.min(window.devicePixelRatio||1,3);
+  sc.canvases.forEach((cv,ci)=>{
+    const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
+    cv.width=Math.round(w*d);cv.height=Math.round(h*d);cv._d=d;cv._w=w;cv._h=h;
+    const bots=sc.canvases.length>1?[sc.bots[ci]]:sc.bots,n=bots.length;
+    let rad,gap;
+    if(sc.id==='kaka'){const span=2*HEXR*C(Math.PI/6)*1.035+.07;rad=Math.min((w-16)/(n*span),h/3.25);gap=rad*span;}
+    else if(n>1){rad=Math.min(w/n*.34,h/3.25);gap=w/n;}
+    else{rad=Math.min(w*.3,h/3.25,sc.id==='knappar'?36:64);gap=0;}
+    bots.forEach((b,i)=>{b.rad=rad;b.cx=w/2+(i-(n-1)/2)*gap;b.cy=h/2+rad*.33;b.canvas=cv;});
+  });
+  renderScene(sc);
+}
+function renderScene(sc){
+  sc.canvases.forEach((cv,ci)=>{
+    if(!cv._d)return;ctx=cv.getContext('2d');ctx.setTransform(cv._d,0,0,cv._d,0,0);ctx.clearRect(0,0,cv._w,cv._h);
+    (sc.canvases.length>1?[sc.bots[ci]]:sc.bots).forEach(drawBot);
+  });
+}
+// Stillbild: tider som visar varje idé tydligt
+const STILL={surr:.9,svava:1,vick:.5,rander:2,kaka:2.2,landar:1.6,knappar:1};
+function settle(sc){sc.bots.forEach(b=>{if(b.t<.01)b.t=STILL[sc.id];b.prevU=99;for(let n=0;n<150;n++)step(b,1/60,false);});renderScene(sc);}
+
+root.querySelectorAll('[data-scene]').forEach((el,i)=>setupScene(el,el.dataset.scene,i));
+
+/* ---------- Interaktion ---------- */
+const status=root.querySelector('.status');
+const knappar=scenes.find(s=>s.id==='knappar');
+root.querySelectorAll('.bee-btn').forEach((btn,i)=>{
+  const b=knappar.bots[i],S0=b.st,label=btn.textContent.trim();
+  const setH=on=>{if(S0.hover!==on){S0.hover=on;if(on)S0.hoverT=b.t;}if(paused)settle(knappar);};
+  const press=()=>{if(!S0.press){S0.press=true;S0.pressT=b.t;}if(paused)settle(knappar);};
+  const release=fire=>{if(!S0.press)return;S0.press=false;if(fire&&!paused){S0.relT=b.t;S0.kickPending=true;}if(paused)settle(knappar);};
+  btn.addEventListener('pointerenter',()=>setH(true));
+  btn.addEventListener('pointerleave',()=>{if(document.activeElement!==btn||!btn.matches(':focus-visible'))setH(false);release(false);});
+  btn.addEventListener('focus',()=>{if(btn.matches(':focus-visible'))setH(true);});
+  btn.addEventListener('blur',()=>setH(false));
+  btn.addEventListener('pointerdown',()=>press());
+  btn.addEventListener('pointerup',()=>release(true));
+  btn.addEventListener('pointercancel',()=>release(false));
+  btn.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.repeat)press();});
+  btn.addEventListener('keyup',e=>{if(e.key==='Enter'||e.key===' ')release(true);});
+  btn.addEventListener('click',()=>{status.textContent='Du tryckte på '+label+'.';if(!S0.press&&b.t-S0.relT>.3&&!paused){S0.relT=b.t;S0.kickPending=true;}});
+});
+const landar=scenes.find(s=>s.id==='landar');
+root.querySelector('[data-scene="landar"] .hit').addEventListener('click',()=>{const b=landar.bots[0];b.t0=b.t;b.prevU=0;if(paused)settle(landar);});
+const sCard=root.querySelector('.js-stripes-card'),sAll=root.querySelector('.js-stripes-all'),pauseBtn=root.querySelector('.js-pause');
+const rander=scenes.find(s=>s.id==='rander');
+sCard.addEventListener('click',()=>{rander.stripes=!rander.stripes;sCard.setAttribute('aria-pressed',String(rander.stripes));sCard.textContent='Ränder: '+(rander.stripes?'på':'av');if(paused)scenes.forEach(snapStripes);});
+sAll.addEventListener('click',()=>{stripesAll=!stripesAll;sAll.setAttribute('aria-pressed',String(stripesAll));if(paused)scenes.forEach(snapStripes);});
+function snapStripes(sc){sc.bots.forEach(b=>{const on=sc.stripes!=null?(sc.stripes||stripesAll):stripesAll;b.fx.stripes=on?1:0;});renderScene(sc);}
+const updatePause=()=>{pauseBtn.textContent=paused?'Spela':'Pausa';pauseBtn.setAttribute('aria-pressed',String(paused));};
+pauseBtn.addEventListener('click',()=>{paused=!paused;updatePause();if(paused)scenes.forEach(settle);});
+reduceQ.addEventListener?.('change',e=>{if(e.matches&&!paused){paused=true;updatePause();scenes.forEach(settle);}});
+
+/* ---------- Loop ---------- */
+function advance(dt){const n=Math.ceil(dt/(1/120));scenes.forEach(sc=>{sc.bots.forEach(b=>{for(let k=0;k<n;k++)step(b,dt/n,true);});renderScene(sc);});}
+let last=0,manual=false;
+function frame(now){
+  const dt=last?Math.min((now-last)/1000,.05):0;last=now;
+  if(!paused&&!manual&&dt>0)advance(dt);
+  requestAnimationFrame(frame);
+}
+// Testkrok för skärmdumpar (ingen påverkan på vanlig användning)
+window.beeDebug={stats:()=>JSON.parse(JSON.stringify(STATS)),manual:on=>{manual=on;},advance,
+  hover:(i,on)=>{const b=knappar.bots[i];b.st.hover=on;if(on)b.st.hoverT=b.t;},press:(i,on)=>{const b=knappar.bots[i];if(on){b.st.press=true;}else{b.st.press=false;b.st.relT=b.t;b.st.kickPending=true;}}};
+updatePause();if(paused)requestAnimationFrame(()=>scenes.forEach(settle));
+requestAnimationFrame(frame);
+})();
+</script>
+</body></html>
