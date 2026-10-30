@@ -18,6 +18,11 @@
 #bee-ex .card h2 span{color:#b38428;margin-right:6px}
 #bee-ex .card p{margin:0;color:#6f6a60;font-size:13px}
 #bee-ex .card .pill{align-self:flex-start;margin-top:10px;min-height:32px;padding:4px 12px;font-size:13px}
+#bee-ex .wings{margin-top:30px}
+#bee-ex .wings>h2{font-size:19px;text-align:center;margin:0 0 2px}
+#bee-ex .wings .sub{text-align:center;color:#6f6a60;margin:0 auto 14px;max-width:620px;font-size:13px}
+#bee-ex .wcards{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+#bee-ex .wcards .stage{height:190px}
 #bee-ex .demo{margin-top:28px;border:1px solid #efece6;border-radius:18px;padding:16px 14px 18px;text-align:center}
 #bee-ex .demo h2{font-size:17px;margin:0 0 2px}
 #bee-ex .demo p{margin:0 auto;color:#6f6a60;font-size:13px;max-width:620px}
@@ -35,6 +40,7 @@
   <div class="bar" role="group" aria-label="Visning">
     <button type="button" class="pill js-pause" aria-pressed="false">Pausa</button>
     <button type="button" class="pill js-stripes-all" aria-pressed="false">Ränder på alla</button>
+    <button type="button" class="pill js-wings-all" aria-pressed="true">Vingar på alla</button>
   </div>
 
   <section class="cards" aria-label="Exempel">
@@ -65,9 +71,64 @@
     </figure>
   </section>
 
+  <section class="wings" aria-labelledby="wings-h">
+    <h2 id="wings-h">Vingar</h2>
+    <p class="sub">Små genomskinliga vingar bakom kroppen – oftast syns bara spetsarna. De visar känslor tillsammans med ögon och antenner.</p>
+    <div class="cards wcards">
+      <figure class="card" data-scene="v-glad" data-col="0">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: glad."></canvas></div>
+        <figcaption><h2>Glad</h2><p>Vingarna lyfta och fladdrar snabbt och glatt bakom ryggen.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-exalterad" data-col="4">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: exalterad."></canvas></div>
+        <figcaption><h2>Exalterad</h2><p>Stora, högt lyfta vingar i full surr – den kan knappt sitta still.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-ledsen" data-col="1">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: ledsen."></canvas></div>
+        <figcaption><h2>Ledsen</h2><p>Vingarna hänger ned och vilar, med ett tungt och långsamt slag ibland.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-radd" data-col="5">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: rädd."></canvas></div>
+        <figcaption><h2>Rädd</h2><p>Vingarna tryckta tätt intill kroppen, darrande.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-arg" data-col="3">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: arg."></canvas></div>
+        <figcaption><h2>Arg</h2><p>Stela, utspärrade vingar som surrar aggressivt.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-stolt" data-col="0">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: stolt."></canvas></div>
+        <figcaption><h2>Stolt</h2><p>Breda, utfällda vingar som hålls helt stilla.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-blyg" data-col="4">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: blyg."></canvas></div>
+        <figcaption><h2>Blyg</h2><p>Hopfällda och nästan gömda – en vinge tittar fram när den sneglar.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-forvanad" data-col="2">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: förvånad."></canvas></div>
+        <figcaption><h2>Förvånad</h2><p>Vingarna slår plötsligt upp i samma ögonblick som ögonen.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-kar" data-col="3">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: kär."></canvas></div>
+        <figcaption><h2>Kär</h2><p>Mjuka, långsamma vingslag i takt med hjärtat.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-trott" data-col="1">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: trött."></canvas></div>
+        <figcaption><h2>Trött</h2><p>Hängande vingar med ett lat slag då och då.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-tanker" data-col="5">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: tänker."></canvas></div>
+        <figcaption><h2>Tänker</h2><p>Ena vingen rycker långsamt medan den funderar.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="v-vrid" data-col="2">
+        <div class="stage"><canvas role="img" aria-label="Beeable med vingar: vridning i 3d."></canvas></div>
+        <figcaption><h2>Vridning i 3D</h2><p>Den bortre vingen göms bakom kroppen, den närmre syns mer.</p></figcaption>
+      </figure>
+    </div>
+  </section>
+
   <section class="demo" aria-labelledby="demo-h">
     <h2 id="demo-h">Knapp-demo</h2>
-    <p>Vila: svävar på stället. Hovra eller fokusera: surrar och piggnar till. Tryck: trycks ihop och landar.</p>
+    <p>Vila: svävar på stället. Hovra eller fokusera: surrar med vingarna och piggnar till. Tryck: trycks ihop, ett snabbt vingslag och landar.</p>
     <div class="btnrow" data-scene="knappar">
       <button type="button" class="bee-btn"><canvas aria-hidden="true"></canvas><span>Hem</span></button>
       <button type="button" class="bee-btn"><canvas aria-hidden="true"></canvas><span>Sök</span></button>
@@ -95,9 +156,21 @@ let ctx=null;
 
 /* ---------- Former (samma som originalet, plus spetsig sexkant för vaxkakan) ---------- */
 const fromFn=f=>{const a=new Float32Array(N);for(let i=0;i<N;i++)a[i]=f(i/N*TAU);return a;};
+function polyToPolar(pts){
+  const out=new Float32Array(N);
+  for(let i=0;i<N;i++){const th=i/N*TAU,dx=C(th),dy=S(th);let best=0;
+    for(let j=0;j<pts.length;j++){const p1=pts[j],p2=pts[(j+1)%pts.length],ex=p2[0]-p1[0],ey=p2[1]-p1[1],den=dx*ey-dy*ex;
+      if(abs(den)<1e-9)continue;const t=(p1[0]*ey-p1[1]*ex)/den,s=(p1[0]*dy-p1[1]*dx)/den;if(t>0&&s>=0&&s<=1&&t>best)best=t;}
+    out[i]=best||1;}
+  return out;
+}
+const heartPts=(()=>{const p=[];for(let k=0;k<240;k++){const t=k/240*TAU;p.push([16*S(t)**3,-(13*C(t)-5*C(2*t)-2*C(3*t)-C(4*t))]);}
+  let mn=1e9,mx=-1e9;p.forEach(q=>{mn=Math.min(mn,q[1]);mx=Math.max(mx,q[1]);});const cy=(mn+mx)/2+1.2;
+  return p.map(q=>[q[0]/15.2,(q[1]-cy)/15.2]);})();
 const HEXR=1.06;
 const SHAPES={
   circle:{face:[0,1,1],r:fromFn(()=>1)},
+  heart:{face:[-.05,.94,1],r:polyToPolar(heartPts)},
   hexP:{face:[0,.97,1],r:fromFn(th=>HEXR*C(Math.PI/6)/C(mod(th-Math.PI/6,Math.PI/3)-Math.PI/6))}
 };
 
@@ -109,14 +182,72 @@ const BASE={bx:0,by:0,roll:0,yaw:0,pitch:0,scale:1,squash:0,spacing:1,gx:0,gy:0,
   open:1,w:.29,h:.64,round:1,lidTop:0,slant:0,curveTop:0,lidBot:0,slantBot:0,curveBot:0,happy:0,arch:.12,thick:.125,tilt:0,escale:1,
   splay:.62,bend:.35,len:.67,fwd:0,shape:'circle',dart:.08,dartRate:1,blinkRate:.22,blinkStyle:'normal',
   buzz:0,ox:0,oy:0,froll:0,alean:0,aout:0,afwd:0};
-const KEYS=[...BODYK];EYEK.forEach(k=>KEYS.push(k+'L',k+'R'));ANTK.forEach(k=>KEYS.push(k+'L',k+'R'));
+/* ---------- Vingar: genomskinliga bivingar bakom kroppen (fram- och bakvinge per sida) ---------- */
+const WINGK=['wang','wfold','wsize'];               // vinkel från lodrätt, hopfällning 0–1, storlek
+const WDEF={wang:1.02,wfold:0,wsize:1,wamp:.035,wfreq:.45};  // wamp/wfreq: fladder (rad, Hz)
+const hexMix=(h1,h2,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),A=p(h1),B=p(h2);
+  return A.map((v,i)=>Math.round(v+(B[i]-v)*t));};
+function wingInit(a){const ph=Math.random()*TAU;a.wg={ph:[ph,ph],amp:[0,0],fr:[.45,.45],show:1,col:null};}
+function wingStep(a,q,dt,advance){
+  const W=a.wg;
+  ['L','R'].forEach((s,i)=>{const amp=q['wamp'+s]??q.wamp,fr=q['wfreq'+s]??q.wfreq;
+    W.amp[i]+=(amp-W.amp[i])*Math.min(1,dt*8);W.fr[i]+=(fr-W.fr[i])*Math.min(1,dt*5);
+    if(advance)W.ph[i]+=TAU*W.fr[i]*dt;});
+}
+const n3=v=>{const l=Math.hypot(v[0],v[1],v[2])||1;return [v[0]/l,v[1]/l,v[2]/l];};
+function wingPts(a,side,rear,off){
+  const g=k=>a.v[k+(side<0?'L':'R')];
+  const fold=clamp(g('wfold'),0,1),size=Math.max(.3,g('wsize'));
+  const ang=g('wang')+(rear?.62:0)+off*(rear?.8:1);
+  const L=(rear?.6:.88)*size*(1-.25*fold),Wd=(rear?.24:.32)*size;
+  const r0=[side*(rear?.5:.46),rear?-.34:-.5,-.6];
+  const d=n3([side*(S(ang)*(1-fold)+.16*fold),-C(ang)*(1-fold)+.22*fold,-.2*(1-fold)-fold]);
+  const w=n3([d[1]-d[2]*fold,-d[0],d[0]*fold]);
+  const R0=rot(a,...r0),k=rShape(a,Math.atan2(R0[1],R0[0]))-1,ox=R0[0]*k,oy=R0[1]*k;
+  const K=30,pts=[];let zs=0;
+  for(let j=0;j<K;j++){const t=j/K*TAU,u=(1-C(t))/2,v=S(t)*Wd/2*Math.pow(u,.5)*(S(t)>0?1:.72);
+    const P=rot(a,r0[0]+d[0]*u*L+w[0]*v,r0[1]+d[1]*u*L+w[1]*v,r0[2]+d[2]*u*L+w[2]*v);pts.push([P[0]+ox,P[1]+oy]);zs+=P[2];}
+  const at=(u,v)=>{const P=rot(a,r0[0]+d[0]*u*L+w[0]*v,r0[1]+d[1]*u*L+w[1]*v,r0[2]+d[2]*u*L+w[2]*v);return [P[0]+ox,P[1]+oy];};
+  return {pts,z:zs/K,at,Wd};
+}
+// front=false: vingar bakom kroppen (ritas först); front=true: vingar som vridits fram (ritas sist)
+function drawWings(a,front,show,still){
+  if(show<.01)return;
+  ctx.save();
+  const W=a.wg;if(W.col!==a.color){W.col=a.color;const f=hexMix(a.color,'#ffffff',.6),e=hexMix(a.color,'#24231f',.2);
+    W.fill='rgb('+f+')';W.edge='rgb('+e+')';}
+  for(const rear of [true,false])for(const side of [-1,1]){
+    const i=side<0?0:1,amp=W.amp[i],fr=W.fr[i];
+    const blur=ss(5,11,fr)*clamp(amp/.05,0,1),n=blur>.05?5:1;
+    const probe=wingPts(a,side,rear,0);if((probe.z>.05)!==front)continue;
+    for(let c=0;c<n;c++){
+      let off=n>1?amp*(2*c/(n-1)-1)*blur+amp*S(W.ph[i])*(1-blur):amp*S(W.ph[i]);
+      if(n>1&&!still)off+=amp*.25*(Math.random()*2-1);
+      const g=wingPts(a,side,rear,off),p=g.pts;
+      ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(let j=1;j<p.length;j++)ctx.lineTo(p[j][0],p[j][1]);ctx.closePath();
+      ctx.globalAlpha=show*(n>1?.2:(rear?.48:.55));ctx.fillStyle=W.fill;ctx.fill();
+      ctx.globalAlpha=show*(n>1?.12:.5);ctx.strokeStyle=W.edge;ctx.lineWidth=.026;ctx.lineJoin='round';ctx.stroke();
+      if(n===1||c===2){ // svaga ådror
+        ctx.globalAlpha=show*(n>1?.1:.28);ctx.lineWidth=.016;ctx.beginPath();
+        const A=g.at(.05,0),B=g.at(.82,g.Wd*.05),Cc=g.at(.38,0),D=g.at(.7,g.Wd*.32);
+        ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.moveTo(Cc[0],Cc[1]);ctx.lineTo(D[0],D[1]);
+        if(!rear){const E=g.at(.5,0),F=g.at(.78,-g.Wd*.26);ctx.moveTo(E[0],E[1]);ctx.lineTo(F[0],F[1]);}
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
+Object.assign(BASE,WDEF);
+const KEYS=[...BODYK];WINGK.forEach(k=>KEYS.push(k+'L',k+'R'));EYEK.forEach(k=>KEYS.push(k+'L',k+'R'));ANTK.forEach(k=>KEYS.push(k+'L',k+'R'));
 const SPR={bx:[160,15],by:[160,15],roll:[120,13],yaw:[110,15],pitch:[110,15],scale:[170,12],squash:[260,11],
   fy:[120,18],fs:[120,18],fsy:[120,18],spacing:[150,18],gx:[520,32],gy:[520,32],lean:[100,6.5]};
 const springOf=k=>{if(SPR[k])return SPR[k];const b=k.slice(0,-1);
+  if(WINGK.includes(b))return [95,7.5];
   if(b==='escale')return [320,15];if(b==='open')return [420,30];if(b==='happy')return [220,22];
   if(ANTK.includes(b))return [105,6.5];return [280,24];};
 
-let paused=reduceQ.matches,stripesAll=false;
+let paused=reduceQ.matches,stripesAll=false,wingsAll=true;
 
 function makeBot(color,scene,i){
   const seed=hash(i*7.3+scene.idx*13.1);
@@ -124,9 +255,9 @@ function makeBot(color,scene,i){
     prevX:0,prevY:0,pvx:0,pvy:0,pyawv:0,stepped:false,cx:0,cy:0,rad:40,
     blink:{on:false,start:0,dur:.17,hold:0,next:1+seed*3,type:'normal',dbl:false},
     sac:{x:0,y:0,ax:0,ay:0,until:0,next:0},
-    fx:{buzz:0,ox:0,oy:0,froll:0,alean:0,aout:0,afwd:0,stripes:0},st:{hover:false,press:false,hoverT:-9,relT:-9,pressT:-9},prevU:0};
+    fx:{wings:1,buzz:0,ox:0,oy:0,froll:0,alean:0,aout:0,afwd:0,stripes:0},st:{hover:false,press:false,hoverT:-9,relT:-9,pressT:-9},prevU:0};
   KEYS.forEach(k=>{const base=k.replace(/[LR]$/,'');b.v[k]=k in BASE?BASE[k]:(base in BASE&&!BODYK.includes(k)?BASE[base]:0);b.vel[k]=0;});
-  b.v.fs=1;b.v.fsy=1;b.v.fy=0;
+  b.v.fs=1;b.v.fsy=1;b.v.fy=0;wingInit(b);
   return b;
 }
 
@@ -147,16 +278,17 @@ function updateBlink(a,R){
 }
 
 /* ---------- Kick: landningsstöt i kropp och kontur ---------- */
-function kick(b,amt){b.vel.squash+=amt;for(let i=0;i<N;i++)b.sv[i]+=amt*.22*C(2*i/N*TAU);}
+function kick(b,amt){b.vel.squash+=amt;b.vel.wangL+=amt*1.8;b.vel.wangR+=amt*1.8;for(let i=0;i<N;i++)b.sv[i]+=amt*.22*C(2*i/N*TAU);}
 
 /* ---------- Ett simuleringssteg ---------- */
 function step(b,dt,advance){
   if(advance)b.t+=dt;
   const q=Object.assign({},BASE,b.scene.drive(b,b.t-b.t0,advance));
+  if(WX[b.scene.id])Object.assign(q,WX[b.scene.id](b,b.t-b.t0,q));
   const T={};
   BODYK.forEach(k=>T[k]=q[k]);
   EYEK.forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
-  ANTK.forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
+  ANTK.concat(WINGK).forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
   const shape=q.shape,amt=q.shapeAmt??(shape==='circle'?0:1),sf=SHAPES[shape].face;
   T.fy=mix(0,sf[0],amt);T.fs=mix(1,sf[1],amt);T.fsy=mix(1,sf[2],amt);
   if(advance){
@@ -172,7 +304,8 @@ function step(b,dt,advance){
   // antennernas eftersläp när kroppen rör sig (från originalet)
   const X=b.v.bx,Y=b.v.by,vx=(X-b.prevX)/dt,vy=(Y-b.prevY)/dt,yv=b.vel.yaw;
   if(b.stepped){const dvx=clamp(vx-b.pvx,-6,6),dvy=clamp(vy-b.pvy,-6,6),dyw=clamp(yv-b.pyawv,-6,6);
-    b.vel.splayL+=-dvy*.8;b.vel.splayR+=-dvy*.8;b.vel.bendL+=-dvy*.4;b.vel.bendR+=-dvy*.4;b.vel.lean+=-dvx*1.1-dyw*.25;}
+    b.vel.splayL+=-dvy*.8;b.vel.splayR+=-dvy*.8;b.vel.bendL+=-dvy*.4;b.vel.bendR+=-dvy*.4;b.vel.lean+=-dvx*1.1-dyw*.25;
+    b.vel.wangL+=-dvy*1.3+dvx*.5;b.vel.wangR+=-dvy*1.3-dvx*.5;}
   b.prevX=X;b.prevY=Y;b.pvx=vx;b.pvy=vy;b.pyawv=yv;b.stepped=true;
   b.v.squash=Math.max(-.35,b.v.squash);
   const f=b.fx,k=Math.min(1,dt*28);
@@ -180,6 +313,8 @@ function step(b,dt,advance){
   f.ox=q.ox;f.oy=q.oy;f.froll=q.froll;f.alean=q.alean;f.aout=q.aout;f.afwd=q.afwd;
   const sOn=b.scene.stripes!=null?(b.scene.stripes||stripesAll):stripesAll;
   f.stripes+=((sOn?1:0)-f.stripes)*Math.min(1,dt*6);
+  const wOn=b.scene.wings||wingsAll;f.wings+=((wOn?1:0)-f.wings)*Math.min(1,dt*6);
+  wingStep(b,q,dt,advance);
 }
 
 /* ---------- Ritning (från originalet, plus surr, ränder och direkta förskjutningar) ---------- */
@@ -268,12 +403,13 @@ function drawBot(b){
   ctx.save();ctx.translate(b.cx+(v.bx+f.ox+jx)*rad,b.cy+(v.by+f.oy+jy)*rad);ctx.rotate(v.roll+f.froll+jr);
   ctx.translate(0,rad);ctx.scale(sx*rad,sy*rad);ctx.translate(0,-1);
   ctx.fillStyle=b.color;ctx.strokeStyle=b.color;
+  drawWings(b,false,f.wings,stillMode);
   antenna(b,-1,bz*.09*rn());antenna(b,1,bz*.09*rn());
   bodyPath(b);ctx.fill();
   ctx.save();bodyPath(b);ctx.clip();
   stripes(b,f.stripes);
   ctx.fillStyle='#fff';eye(b,-1,blink);eye(b,1,blink);
-  ctx.restore();ctx.restore();
+  ctx.restore();drawWings(b,true,f.wings,stillMode);ctx.restore();
 }
 
 /* ---------- Scener ---------- */
@@ -317,10 +453,66 @@ const DRIVERS={
       splay:mix(.6,.4,h)+.35*p,len:.67+.08*h,bend:.35-.12*h+.25*tw,escale:1+.1*h-.06*p,w:.29+.02*h,open:1-.25*p,
       afwd:.55*tw,aout:-.18*tw,happy:Math.max(hp,0),arch:.13,dart:.06*(1-h),blinkRate:.2};}
 };
+// Vingtillägg för de första exemplen (läser av scenens egna värden i q)
+const WX={
+  surr:(b,t,q)=>({wamp:.07+.13*q.buzz,wfreq:15+7*q.buzz,wang:1.0-.18*q.buzz}),
+  svava:()=>({wamp:.1,wfreq:17,wang:.94}),
+  vick:(b,t,q)=>({wamp:.05+.4*q.buzz,wfreq:14,wangL:1+1.4*q.froll,wangR:1-1.4*q.froll}),
+  kaka:(b,t,q)=>({wfold:.55*q.shapeAmt}),
+  landar:(b,t,q)=>{const l=q.buzz/.55;return {wamp:.04+.16*l,wfreq:.45+16*l,wang:1.02-.12*l};},
+  knappar:(b,t,q)=>{const S0=b.st,h=S0.hover?1:0,p=S0.press?1:0,fl=win(b.t-S0.relT,0,.45,.05);
+    return {wamp:fl?.32*fl:.05+.11*h*(1-p),wfreq:fl?5.5:.45+17*h*(1-p),wang:1.02-.14*h+.4*p,wfold:.15*p};}
+};
+// Vingkänslor: ögon, antenner och vingar tillsammans, utan att lämna platsen
+Object.assign(DRIVERS,{
+  'v-glad'(b,t){const burst=.65+.35*Math.max(0,o(t,.5))**2;
+    return {...idleHover(b,t,.6),happy:1,w:.3,arch:.13,roll:.06*o(t,.4),splay:.52+.1*o(t,1.6),bend:.3,blinkRate:.15,
+      wang:.78,wamp:.2*burst,wfreq:10};},
+  'v-exalterad'(b,t){return {...idleHover(b,t,.5),happy:1,w:.32,escale:1.15,arch:.17,thick:.13,spacing:1.06,
+      by:-.02-.02*abs(o(t,2)),roll:.06*o(t,.9),splayL:.38+.28*o(t,7),splayR:.38+.28*o(t,7,Math.PI),len:.74,buzz:.25,dart:.3,dartRate:3,blinkRate:.1,
+      wang:.6,wsize:1.12,wamp:.28,wfreq:16};},
+  'v-ledsen'(b,t){const sigh=Math.max(0,o(t,.25))**3;
+    return {pitch:-.16,gy:.14,scale:.94+.02*sigh,squash:.05-.05*sigh,lidTop:.2,slant:-.55,h:.62,tilt:.16,escale:1.06,roll:.04*o(t,.07),
+      splay:1.55,bend:.55,len:.62,blinkStyle:'slow',blinkRate:.15,dart:.06,
+      wang:2.05-.25*sigh,wamp:.16*sigh,wfreq:.5,wsize:.95};},
+  'v-radd'(b,t){return {escale:.95,w:.31,h:.66,slant:-.32,lidTop:.08,squash:.08,scale:.9,pitch:-.05,ox:.01*o(t,17),
+      yaw:.3*Math.tanh(4*o(t,.2,b.seed*4)),splay:1.15+.04*o(t,15),fwd:-.5,bend:-.2,dart:.7,dartRate:5,blinkRate:.5,
+      wfold:.82,wang:1.2,wamp:.06,wfreq:19};},
+  'v-arg'(b,t){return {slant:.8,lidTop:.24,lidBot:.12,h:.56,w:.31,tilt:-.08,ox:.012*o(t,9),pitch:-.12,scale:1.04+.02*o(t,1.2),squash:.05,
+      splay:.16+.04*o(t,13),fwd:.65,len:.72,bend:-.1,blinkRate:.08,dart:.02,buzz:.3,
+      wang:1.28,wsize:1.08,wamp:.12,wfreq:24};},
+  'v-stolt'(b,t){return {pitch:.26,scale:1.05,squash:-.05,lidTop:.38,curveTop:-.12,lidBot:.22,w:.31,yaw:.16*o(t,.09),roll:.04*o(t,.09,1),
+      by:.01*o(t,.4),splay:.4+.04*o(t,.5),len:.78,bend:.15,blinkStyle:'slow',blinkRate:.15,dart:.04,
+      wang:1.22,wsize:1.18,wamp:0};},
+  'v-blyg'(b,t){const u=mod(t,3.8),g=win(u,1.6,2.2,.15);
+    return {scale:.9,squash:.05,yaw:-.36+.24*g,pitch:-.24+.18*g,roll:-.12,gx:-.3+.6*g,gy:.35-.35*g,escale:.9,lidTop:.15,lidBot:.14,curveBot:.1,slant:-.25,
+      splay:.95,bend:-.5,lean:-.1,len:.6,blinkRate:.35,dart:.06,
+      wfoldL:.85,wfoldR:.72-.45*g,wang:1.3,wamp:.03,wfreq:.4};},
+  'v-forvanad'(b,t,adv){const u=mod(t,3.4),pre=win(u,0,.14,.04),pop=ss(.1,.25,u)*(1-ss(2.4,3.2,u));
+    if(adv&&b.prevU<.12&&u>=.12){b.vel.wangL-=7;b.vel.wangR-=7;}b.prevU=u;
+    return {open:1-.5*pre,escale:1+.3*pop,w:.29+.06*pop,h:.64+.06*pop,spacing:1+.3*pop,squash:.15*pre-.08*pop,by:-.03*pop,pitch:.12*pop,
+      splay:.62-.5*pop,len:.67+.12*pop,bend:.35-.4*pop,blinkRate:.05,dart:.05,
+      wfold:.6*(1-pop),wang:1.05-.3*pop,wsize:1+.15*pop,wamp:.03,wfreq:.4};},
+  'v-kar'(b,t){const u=mod(t,1.05),beat=Math.exp(-(((u-.08)/.05)**2))+.7*Math.exp(-(((u-.3)/.05)**2));
+    return {shape:'heart',scale:1+.06*beat,happy:1,arch:.11,thick:.13,escale:1.12,spacing:.95,gy:-.15,roll:.08*o(t,.35),yaw:.1*o(t,.18),pitch:.08,
+      splay:.42,bend:-.55+.08*o(t,1),len:.66,blinkStyle:'slow',blinkRate:.4,dart:.05,
+      wang:.92,wamp:.3,wfreq:1/1.05};},
+  'v-trott'(b,t){const u=mod(t,4.6),nod=u<3.7?(u/3.7)**2:1-ss(3.7,3.95,u),lazy=win(u,3.75,4.45,.1);
+    return {pitch:-.35*nod,lidTop:.5+.42*nod,curveTop:.1,squash:.06*nod,by:.02*nod,roll:.07*nod,yaw:.1*o(t,.06),
+      splay:1.15+.4*nod,bend:.55,len:.6,blinkStyle:'slow',blinkRate:.25,dart:.03,
+      wang:1.7+.35*nod-.5*lazy,wamp:.02,wfreq:.4};},
+  'v-tanker'(b,t){const side=mod(t,6)<3.4?-1:-.3,tw=Math.max(0,o(t,.55))**6;
+    return {gx:.5*side,gy:-.62,yaw:.2*side,pitch:.2,roll:.09+.04*o(t,.15),lidBotL:.25,lidTopR:.22,slantR:.25,escaleL:1.03,
+      splayR:.42+.35*Math.max(0,o(t,1.4))**6,splayL:.75,bendL:.5,dart:.12,dartRate:.6,blinkRate:.18,
+      wangL:1.15,wampL:.02,wangR:1.05-.45*tw,wampR:.02,wfreqL:.35,wfreqR:.35};},
+  'v-vrid'(b,t){return {...idleHover(b,t,.3),yaw:.85*o(t,.11),pitch:.08+.22*o(t,.08,1),gx:.5*o(t,.11),dart:.04,blinkRate:.2,
+      wang:.98,wamp:.12,wfreq:13};}
+});
 function setupScene(el,id,idx){
   const canvases=[...el.querySelectorAll('canvas')];
   const sc={id,idx,el,canvases,bots:[],drive:DRIVERS[id],stripes:id==='rander'?true:null};
-  const cols={surr:[0],svava:[1],vick:[2],rander:[0,1,3],kaka:[0,2,4],landar:[3],knappar:[0,1,2,3]}[id];
+  const cols={surr:[0],svava:[1],vick:[2],rander:[0,1,3],kaka:[0,2,4],landar:[3],knappar:[0,1,2,3]}[id]||[el.dataset.col|0];
+  if(id.startsWith('v-'))sc.wings=true;
   cols.forEach((c,i)=>{const b=makeBot(palette[c],sc,i);b.t0=-(i*.17);sc.bots.push(b);});
   if(id==='landar')sc.bots[0].color=palette[5];
   scenes.push(sc);
@@ -336,7 +528,7 @@ function layout(sc){
     let rad,gap;
     if(sc.id==='kaka'){const span=2*HEXR*C(Math.PI/6)*1.035+.07;rad=Math.min((w-16)/(n*span),h/3.25);gap=rad*span;}
     else if(n>1){rad=Math.min(w/n*.34,h/3.25);gap=w/n;}
-    else{rad=Math.min(w*.3,h/3.25,sc.id==='knappar'?36:64);gap=0;}
+    else{rad=Math.min(w*(sc.wings?.27:.3),h/3.25,sc.id==='knappar'?36:sc.wings?58:64);gap=0;}
     bots.forEach((b,i)=>{b.rad=rad;b.cx=w/2+(i-(n-1)/2)*gap;b.cy=h/2+rad*.33;b.canvas=cv;});
   });
   renderScene(sc);
@@ -348,7 +540,7 @@ function renderScene(sc){
   });
 }
 // Stillbild: tider som visar varje idé tydligt
-const STILL={surr:.9,svava:1,vick:.5,rander:2,kaka:2.2,landar:1.6,knappar:1};
+const STILL={surr:.9,svava:1,vick:.5,rander:2,kaka:2.2,landar:1.6,knappar:1,'v-forvanad':.6,'v-kar':.25,'v-trott':3.4,'v-tanker':1.4,'v-vrid':2.2,'v-blyg':1.9,'v-ledsen':1};
 function settle(sc){sc.bots.forEach(b=>{if(b.t<.01)b.t=STILL[sc.id];b.prevU=99;for(let n=0;n<150;n++)step(b,1/60,false);});renderScene(sc);}
 
 root.querySelectorAll('[data-scene]').forEach((el,i)=>setupScene(el,el.dataset.scene,i));
@@ -377,6 +569,8 @@ root.querySelector('[data-scene="landar"] .hit').addEventListener('click',()=>{c
 const sCard=root.querySelector('.js-stripes-card'),sAll=root.querySelector('.js-stripes-all'),pauseBtn=root.querySelector('.js-pause');
 const rander=scenes.find(s=>s.id==='rander');
 sCard.addEventListener('click',()=>{rander.stripes=!rander.stripes;sCard.setAttribute('aria-pressed',String(rander.stripes));sCard.textContent='Ränder: '+(rander.stripes?'på':'av');if(paused)scenes.forEach(snapStripes);});
+const wAll=root.querySelector('.js-wings-all');
+wAll.addEventListener('click',()=>{wingsAll=!wingsAll;wAll.setAttribute('aria-pressed',String(wingsAll));if(paused)scenes.forEach(sc=>{sc.bots.forEach(b=>b.fx.wings=(sc.wings||wingsAll)?1:0);renderScene(sc);});});
 sAll.addEventListener('click',()=>{stripesAll=!stripesAll;sAll.setAttribute('aria-pressed',String(stripesAll));if(paused)scenes.forEach(snapStripes);});
 function snapStripes(sc){sc.bots.forEach(b=>{const on=sc.stripes!=null?(sc.stripes||stripesAll):stripesAll;b.fx.stripes=on?1:0;});renderScene(sc);}
 const updatePause=()=>{pauseBtn.textContent=paused?'Spela':'Pausa';pauseBtn.setAttribute('aria-pressed',String(paused));};

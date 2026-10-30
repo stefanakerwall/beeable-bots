@@ -4,6 +4,7 @@
   <div class="bee-row" role="group" aria-label="Läge">
     <button type="button" data-emo="auto" aria-pressed="true">Automatiskt</button>
     <button type="button" class="bee-pause" aria-pressed="false">Pausa</button>
+    <button type="button" class="bee-wings" aria-pressed="true">Vingar</button>
   </div>
   <div class="bee-label">Känslor och rörelser</div>
   <div class="bee-grid bee-emotions" role="group" aria-label="Välj känsla eller rörelse"></div>
@@ -118,10 +119,68 @@ const BASE={bx:0,by:0,roll:0,yaw:0,pitch:0,scale:1,squash:0,spacing:1,gx:0,gy:0,
   open:1,w:.29,h:.64,round:1,lidTop:0,slant:0,curveTop:0,lidBot:0,slantBot:0,curveBot:0,happy:0,arch:.12,thick:.125,tilt:0,escale:1,
   splay:.62,bend:.35,len:.67,fwd:0,
   shape:'circle',hopH:0,hopPeriod:.6,dart:.15,dartRate:1,blinkRate:.25,blinkStyle:'normal'};
-const KEYS=[...BODYK];EYEK.forEach(k=>KEYS.push(k+'L',k+'R'));ANTK.forEach(k=>KEYS.push(k+'L',k+'R'));
+/* ---------- Vingar: genomskinliga bivingar bakom kroppen (fram- och bakvinge per sida) ---------- */
+const WINGK=['wang','wfold','wsize'];               // vinkel från lodrätt, hopfällning 0–1, storlek
+const WDEF={wang:1.02,wfold:0,wsize:1,wamp:.035,wfreq:.45};  // wamp/wfreq: fladder (rad, Hz)
+const hexMix=(h1,h2,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),A=p(h1),B=p(h2);
+  return A.map((v,i)=>Math.round(v+(B[i]-v)*t));};
+function wingInit(a){const ph=Math.random()*TAU;a.wg={ph:[ph,ph],amp:[0,0],fr:[.45,.45],show:1,col:null};}
+function wingStep(a,q,dt,advance){
+  const W=a.wg;
+  ['L','R'].forEach((s,i)=>{const amp=q['wamp'+s]??q.wamp,fr=q['wfreq'+s]??q.wfreq;
+    W.amp[i]+=(amp-W.amp[i])*Math.min(1,dt*8);W.fr[i]+=(fr-W.fr[i])*Math.min(1,dt*5);
+    if(advance)W.ph[i]+=TAU*W.fr[i]*dt;});
+}
+const n3=v=>{const l=Math.hypot(v[0],v[1],v[2])||1;return [v[0]/l,v[1]/l,v[2]/l];};
+function wingPts(a,side,rear,off){
+  const g=k=>a.v[k+(side<0?'L':'R')];
+  const fold=clamp(g('wfold'),0,1),size=Math.max(.3,g('wsize'));
+  const ang=g('wang')+(rear?.62:0)+off*(rear?.8:1);
+  const L=(rear?.6:.88)*size*(1-.25*fold),Wd=(rear?.24:.32)*size;
+  const r0=[side*(rear?.5:.46),rear?-.34:-.5,-.6];
+  const d=n3([side*(S(ang)*(1-fold)+.16*fold),-C(ang)*(1-fold)+.22*fold,-.2*(1-fold)-fold]);
+  const w=n3([d[1]-d[2]*fold,-d[0],d[0]*fold]);
+  const R0=rot(a,...r0),k=rShape(a,Math.atan2(R0[1],R0[0]))-1,ox=R0[0]*k,oy=R0[1]*k;
+  const K=30,pts=[];let zs=0;
+  for(let j=0;j<K;j++){const t=j/K*TAU,u=(1-C(t))/2,v=S(t)*Wd/2*Math.pow(u,.5)*(S(t)>0?1:.72);
+    const P=rot(a,r0[0]+d[0]*u*L+w[0]*v,r0[1]+d[1]*u*L+w[1]*v,r0[2]+d[2]*u*L+w[2]*v);pts.push([P[0]+ox,P[1]+oy]);zs+=P[2];}
+  const at=(u,v)=>{const P=rot(a,r0[0]+d[0]*u*L+w[0]*v,r0[1]+d[1]*u*L+w[1]*v,r0[2]+d[2]*u*L+w[2]*v);return [P[0]+ox,P[1]+oy];};
+  return {pts,z:zs/K,at,Wd};
+}
+// front=false: vingar bakom kroppen (ritas först); front=true: vingar som vridits fram (ritas sist)
+function drawWings(a,front,show,still){
+  if(show<.01)return;
+  ctx.save();
+  const W=a.wg;if(W.col!==a.color){W.col=a.color;const f=hexMix(a.color,'#ffffff',.6),e=hexMix(a.color,'#24231f',.2);
+    W.fill='rgb('+f+')';W.edge='rgb('+e+')';}
+  for(const rear of [true,false])for(const side of [-1,1]){
+    const i=side<0?0:1,amp=W.amp[i],fr=W.fr[i];
+    const blur=ss(5,11,fr)*clamp(amp/.05,0,1),n=blur>.05?5:1;
+    const probe=wingPts(a,side,rear,0);if((probe.z>.05)!==front)continue;
+    for(let c=0;c<n;c++){
+      let off=n>1?amp*(2*c/(n-1)-1)*blur+amp*S(W.ph[i])*(1-blur):amp*S(W.ph[i]);
+      if(n>1&&!still)off+=amp*.25*(Math.random()*2-1);
+      const g=wingPts(a,side,rear,off),p=g.pts;
+      ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(let j=1;j<p.length;j++)ctx.lineTo(p[j][0],p[j][1]);ctx.closePath();
+      ctx.globalAlpha=show*(n>1?.2:(rear?.48:.55));ctx.fillStyle=W.fill;ctx.fill();
+      ctx.globalAlpha=show*(n>1?.12:.5);ctx.strokeStyle=W.edge;ctx.lineWidth=.026;ctx.lineJoin='round';ctx.stroke();
+      if(n===1||c===2){ // svaga ådror
+        ctx.globalAlpha=show*(n>1?.1:.28);ctx.lineWidth=.016;ctx.beginPath();
+        const A=g.at(.05,0),B=g.at(.82,g.Wd*.05),Cc=g.at(.38,0),D=g.at(.7,g.Wd*.32);
+        ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.moveTo(Cc[0],Cc[1]);ctx.lineTo(D[0],D[1]);
+        if(!rear){const E=g.at(.5,0),F=g.at(.78,-g.Wd*.26);ctx.moveTo(E[0],E[1]);ctx.lineTo(F[0],F[1]);}
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
+Object.assign(BASE,WDEF);
+const KEYS=[...BODYK];WINGK.forEach(k=>KEYS.push(k+'L',k+'R'));EYEK.forEach(k=>KEYS.push(k+'L',k+'R'));ANTK.forEach(k=>KEYS.push(k+'L',k+'R'));
 const SPR={bx:[160,15],by:[160,15],roll:[120,13],yaw:[110,15],pitch:[110,15],scale:[170,12],squash:[260,11],
   fy:[120,18],fs:[120,18],fsy:[120,18],spacing:[150,18],gx:[520,32],gy:[520,32],lean:[100,6.5]};
 const springOf=k=>{if(SPR[k])return SPR[k];const b=k.slice(0,-1);
+  if(WINGK.includes(b))return [95,7.5];
   if(b==='escale')return [320,15];if(b==='open')return [420,30];if(b==='happy')return [220,22];
   if(ANTK.includes(b))return [105,6.5];return [280,24];};
 
@@ -199,6 +258,33 @@ const AUTO=ORDER.filter(k=>k!=='snurrar'||true);
 const MORPHS=['heart','hex','star','squircle','blob','drop','spiky','melt'];
 const DIRS={'up-left':[-.8,-.8],up:[0,-1],'up-right':[.8,-.8],left:[-1,0],front:[0,0],right:[1,0],'down-left':[-.8,.8],down:[0,1],'down-right':[.8,.8]};
 
+/* ---------- Vingar per känsla ---------- */
+const WP={
+ glad:()=>({wang:.8,wamp:.2,wfreq:10}),
+ exalterad:()=>({wang:.6,wsize:1.12,wamp:.28,wfreq:16}),
+ skrattar:()=>({wang:.85,wamp:.2,wfreq:9}),
+ kar:()=>({wang:.92,wamp:.3,wfreq:1/1.05}),
+ stolt:()=>({wang:1.22,wsize:1.18,wamp:0}),
+ dansar:()=>({wang:.85,wamp:.22,wfreq:2}),
+ blinkar:t=>{const k=win(mod(t,2.6),.7,1.35,.08);return {wangR:1.02-.4*k,wamp:.03};},
+ nyfiken:()=>({wangL:.85,wangR:1.12,wamp:.05,wfreq:3}),
+ forvanad:t=>{const u=mod(t,3.4),pop=ss(.1,.25,u)*(1-ss(2.4,3.2,u));return {wfold:.6*(1-pop),wang:1.05-.3*pop,wsize:1+.15*pop};},
+ tanker:t=>{const tw=Math.max(0,o(t,.55))**6;return {wangL:1.15,wangR:1.05-.45*tw,wamp:.02,wfreq:.35};},
+ forvirrad:t=>{const tl=Math.tanh(3*o(t,.33));return {wangL:1-.3*tl,wangR:1+.3*tl,wamp:.08,wfreq:1.5};},
+ misstanksam:()=>({wfold:.45,wamp:0}),
+ koncentrerad:()=>({wfold:.3,wamp:.04,wfreq:12}),
+ blyg:t=>{const g=win(mod(t,3.8),1.6,2.2,.15);return {wfoldL:.85,wfoldR:.72-.45*g,wang:1.3,wamp:.03};},
+ ledsen:t=>{const sigh=Math.max(0,o(t,.25))**3;return {wang:2.05-.25*sigh,wamp:.16*sigh,wfreq:.5,wsize:.95};},
+ radd:()=>({wfold:.82,wang:1.2,wamp:.06,wfreq:19}),
+ arg:()=>({wang:1.28,wsize:1.08,wamp:.12,wfreq:24}),
+ trott:t=>{const u=mod(t,4.6),nod=u<3.7?(u/3.7)**2:1-ss(3.7,3.95,u),lazy=win(u,3.75,4.45,.1);return {wang:1.7+.35*nod-.5*lazy,wamp:.02};},
+ uttrakad:()=>({wang:1.6,wamp:.03,wfreq:.3}),
+ ja:()=>({wamp:.12,wfreq:1.6}),
+ nej:()=>({wamp:.04}),
+ studsar:(t,a)=>({wamp:a.air?.28:.05,wfreq:a.air?14:.5,wang:a.air?.75:1.05}),
+ snurrar:()=>({wamp:.15,wfreq:12})
+};
+let wingsOn=true;
 /* ---------- Tillstånd ---------- */
 let mode='auto',paused=reduceQ.matches,shapeOverride=null,gazeOverride=null,pointer=null;
 let w=600,h=460,cols=3,cw=200,ch=220,rad=60;
@@ -209,7 +295,7 @@ const avatars=palette.map((color,i)=>{
     blink:{on:false,start:0,dur:.17,hold:0,next:1+Math.random()*3,type:'normal',dbl:false},
     sac:{x:0,y:0,ax:0,ay:0,until:0,next:0},auto:{id:AUTO[(i*5+2)%AUTO.length],until:1.5+i*.9+Math.random()*1.2,shape:null,gaze:null}};
   KEYS.forEach(k=>{const b=k.replace(/[LR]$/,'');a.v[k]=k in BASE?BASE[k]:(b in BASE&&!BODYK.includes(k)?BASE[b]:0);a.vel[k]=0;});
-  a.v.fs=1;a.v.fsy=1;a.v.fy=0;
+  a.v.fs=1;a.v.fsy=1;a.v.fy=0;wingInit(a);a.wshow=1;
   return a;
 });
 
@@ -217,10 +303,11 @@ function resolve(a){
   const id=mode==='auto'?a.auto.id:mode,pr=P[id];
   const tl=a.t-a.segStart+(mode==='auto'?a.seed*.5:-a.i*.11);
   const q=Object.assign({},BASE,pr.f(tl,a));
+  if(WP[id])Object.assign(q,WP[id](tl,a));
   const T={};
   BODYK.forEach(k=>T[k]=q[k]);
   EYEK.forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
-  ANTK.forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
+  ANTK.concat(WINGK).forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
   let shape=q.shape,amt=q.shapeAmt??(shape==='circle'?0:1);
   const ov=shapeOverride||(mode==='auto'?a.auto.shape:null);
   if(ov){shape=ov;amt=ov==='circle'?0:1;}
@@ -234,7 +321,7 @@ function resolve(a){
   T.openL*=fine.open;T.openR*=fine.open;
   let hopH=q.hopH,hopPeriod=q.hopPeriod;
   if(fine.bounce>0&&fine.bounce*.55>hopH){hopH=fine.bounce*.55;hopPeriod=.45+fine.bounce*.35;}
-  return {T,shape,amt,hopH,hopPeriod,dart:q.dart,dartRate:q.dartRate,blinkRate:q.blinkRate,blinkStyle:q.blinkStyle};
+  return {T,q,shape,amt,hopH,hopPeriod,dart:q.dart,dartRate:q.dartRate,blinkRate:q.blinkRate,blinkStyle:q.blinkStyle};
 }
 
 const GRAV=16;
@@ -288,7 +375,7 @@ function step(a,dt,advance){
     if(R.hopH<=0&&!a.air)a.hopTimer=Math.min(a.hopTimer,.3);
   }
   if(a.air){a.jv+=GRAV*dt;a.jy+=a.jv*dt;sqAdd-=clamp(abs(a.jv)*.035,0,.14);
-    if(a.jy>=0){a.jy=0;a.air=false;a.vel.squash+=a.jv*.55;for(let i=0;i<N;i++)a.sv[i]+=a.jv*.22*C(2*i/N*TAU);a.jv=0;}}
+    if(a.jy>=0){a.jy=0;a.air=false;a.vel.squash+=a.jv*.55;a.vel.wangL+=a.jv*.6;a.vel.wangR+=a.jv*.6;for(let i=0;i<N;i++)a.sv[i]+=a.jv*.22*C(2*i/N*TAU);a.jv=0;}}
   T.squash+=sqAdd;
   // fjädrar
   KEYS.forEach(k=>{const [K,D]=springOf(k);let w=a.vel[k];w+=(K*(T[k]-a.v[k])-D*w)*dt;a.vel[k]=w;a.v[k]+=w*dt;});
@@ -298,9 +385,11 @@ function step(a,dt,advance){
   // eftersläp i antennerna: kroppens hastighetsändring ger antennerna en knuff
   const X=a.v.bx,Y=a.v.by+a.jy,vx=(X-a.prevX)/dt,vy=(Y-a.prevY)/dt,yv=a.vel.yaw;
   if(a.stepped){const dvx=clamp(vx-a.pvx,-6,6),dvy=clamp(vy-a.pvy,-6,6),dyw=clamp(yv-a.pyawv,-6,6);
-    a.vel.splayL+=-dvy*.8;a.vel.splayR+=-dvy*.8;a.vel.bendL+=-dvy*.4;a.vel.bendR+=-dvy*.4;a.vel.lean+=-dvx*1.1-dyw*.25-a.vel.roll*0;}
+    a.vel.splayL+=-dvy*.8;a.vel.splayR+=-dvy*.8;a.vel.bendL+=-dvy*.4;a.vel.bendR+=-dvy*.4;a.vel.lean+=-dvx*1.1-dyw*.25-a.vel.roll*0;
+    a.vel.wangL+=-dvy*1.3+dvx*.5;a.vel.wangR+=-dvy*1.3-dvx*.5;}
   a.prevX=X;a.prevY=Y;a.pvx=vx;a.pvy=vy;a.pyawv=yv;a.stepped=true;
   a.v.squash=Math.max(-.35,a.v.squash);
+  a.wshow+=((wingsOn?1:0)-a.wshow)*Math.min(1,dt*6);wingStep(a,R.q,dt,advance);
 }
 
 /* ---------- Ritning ---------- */
@@ -364,11 +453,12 @@ function render(){
     const sq=v.squash,sx=(1+sq)*v.scale,sy=v.scale/(1+sq);
     ctx.translate(0,rad);ctx.scale(sx*rad,sy*rad);ctx.translate(0,-1);
     ctx.fillStyle=a.color;ctx.strokeStyle=a.color;
+    drawWings(a,false,a.wshow,paused);
     antenna(a,-1);antenna(a,1);
     bodyPath(a);ctx.fill();
     ctx.save();bodyPath(a);ctx.clip();ctx.fillStyle='#fff';
     eye(a,-1,blink);eye(a,1,blink);
-    ctx.restore();ctx.restore();
+    ctx.restore();drawWings(a,true,a.wshow,paused);ctx.restore();
   });
 }
 
@@ -402,6 +492,8 @@ root.querySelectorAll('[data-gaze]').forEach(btn=>btn.addEventListener('click',(
 root.querySelectorAll('[data-fine]').forEach(inp=>inp.addEventListener('input',()=>{fine[inp.dataset.fine]=parseFloat(inp.value);if(paused)settle();}));
 root.querySelector('.bee-reset').addEventListener('click',()=>{root.querySelectorAll('[data-fine]').forEach(inp=>{inp.value=inp.dataset.fine==='open'||inp.dataset.fine==='tempo'?1:0;fine[inp.dataset.fine]=parseFloat(inp.value);});if(paused)settle();});
 pause.addEventListener('click',()=>{paused=!paused;updatePause();});
+const wingsBtn=root.querySelector('.bee-wings');
+wingsBtn.addEventListener('click',()=>{wingsOn=!wingsOn;wingsBtn.setAttribute('aria-pressed',String(wingsOn));if(paused){avatars.forEach(a=>a.wshow=wingsOn?1:0);settle();}});
 reduceQ.addEventListener?.('change',e=>{if(e.matches&&!paused){paused=true;updatePause();settle();}});
 canvas.addEventListener('pointermove',e=>{const b=canvas.getBoundingClientRect();pointer={x:(e.clientX-b.left)/b.width*w,y:(e.clientY-b.top)/b.height*h};});
 canvas.addEventListener('pointerleave',()=>{pointer=null;});
