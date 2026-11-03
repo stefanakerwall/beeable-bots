@@ -126,9 +126,26 @@
     </div>
   </section>
 
+  <section class="wings" aria-labelledby="load-h">
+    <h2 id="load-h">Laddning</h2>
+    <p class="sub">Boten blir till droppar som i en tecknad film: kroppen drar ut sig, halsen tunnas och knipsas av. Ingen ansikte, inga vingar på dropparna. Visas automatiskt – tryck Starta/Stoppa för att styra som ett riktigt UI-läge.</p>
+    <div class="cards">
+      <figure class="card" data-scene="goo-typing" data-col="1">
+        <div class="stage"><canvas role="img" aria-label="En Beeable som delar sig i tre studsande prickar som visar att någon skriver."></canvas></div>
+        <figcaption><h2>Skriver…</h2><p>Kroppen sträcks ut och knipsas till tre droppar som studsar i en våg, med små vätskebryggor som släpper.</p></figcaption>
+        <button type="button" class="pill js-goo" aria-pressed="false">Starta</button>
+      </figure>
+      <figure class="card" data-scene="goo-spinner" data-col="4">
+        <div class="stage"><canvas role="img" aria-label="En Beeable som knoppar av droppar i en roterande ring, en laddningssymbol."></canvas></div>
+        <figcaption><h2>Laddar</h2><p>Droppar knoppar av en efter en runt ringen tills kroppen själv blir den sista – sedan spiralerar de tillbaka med ett plask.</p></figcaption>
+        <button type="button" class="pill js-goo" aria-pressed="false">Starta</button>
+      </figure>
+    </div>
+  </section>
+
   <section class="demo" aria-labelledby="demo-h">
     <h2 id="demo-h">Knapp-demo</h2>
-    <p>Vila: svävar på stället. Hovra eller fokusera: surrar med vingarna och piggnar till. Tryck: trycks ihop, ett snabbt vingslag och landar.</p>
+    <p>Vila: svävar på stället. Hovra eller fokusera: surrar med vingarna och piggnar till. Tryck: trycks ihop, ett snabbt vingslag och landar. Sök visar laddning och Meddelanden visar skriver i 2,5 s innan boten återbildas.</p>
     <div class="btnrow" data-scene="knappar">
       <button type="button" class="bee-btn"><canvas aria-hidden="true"></canvas><span>Hem</span></button>
       <button type="button" class="bee-btn"><canvas aria-hidden="true"></canvas><span>Sök</span></button>
@@ -285,6 +302,7 @@ function step(b,dt,advance){
   if(advance)b.t+=dt;
   const q=Object.assign({},BASE,b.scene.drive(b,b.t-b.t0,advance));
   if(WX[b.scene.id])Object.assign(q,WX[b.scene.id](b,b.t-b.t0,q));
+  if(b.goo)gooPose(b,q);
   const T={};
   BODYK.forEach(k=>T[k]=q[k]);
   EYEK.forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
@@ -315,6 +333,7 @@ function step(b,dt,advance){
   f.stripes+=((sOn?1:0)-f.stripes)*Math.min(1,dt*6);
   const wOn=b.scene.wings||wingsAll;f.wings+=((wOn?1:0)-f.wings)*Math.min(1,dt*6);
   wingStep(b,q,dt,advance);
+  if(b.goo)gooStep(b,dt,advance);
 }
 
 /* ---------- Ritning (från originalet, plus surr, ränder och direkta förskjutningar) ---------- */
@@ -400,16 +419,160 @@ function drawBot(b){
   const dx=v.bx+f.ox+jx,dy=v.by+f.oy+jy; // ankarpunktens förflyttning i radier
   const st=STATS[b.scene.id]||(STATS[b.scene.id]={dx:0,dy:0});
   if(b.t>1){st.dx=Math.max(st.dx,abs(dx));st.dy=Math.max(st.dy,abs(dy));}
-  ctx.save();ctx.translate(b.cx+(v.bx+f.ox+jx)*rad,b.cy+(v.by+f.oy+jy)*rad);ctx.rotate(v.roll+f.froll+jr);
-  ctx.translate(0,rad);ctx.scale(sx*rad,sy*rad);ctx.translate(0,-1);
-  ctx.fillStyle=b.color;ctx.strokeStyle=b.color;
-  drawWings(b,false,f.wings,stillMode);
-  antenna(b,-1,bz*.09*rn());antenna(b,1,bz*.09*rn());
-  bodyPath(b);ctx.fill();
-  ctx.save();bodyPath(b);ctx.clip();
-  stripes(b,f.stripes);
-  ctx.fillStyle='#fff';eye(b,-1,blink);eye(b,1,blink);
-  ctx.restore();drawWings(b,true,f.wings,stillMode);ctx.restore();
+  const G=b.goo&&b.goo.render,acc=b.goo?b.goo.acc:1;
+  const T0=()=>{ctx.translate(b.cx+(v.bx+f.ox+jx)*rad,b.cy+(v.by+f.oy+jy)*rad);ctx.rotate(v.roll+f.froll+jr);
+    ctx.translate(0,rad);ctx.scale(sx*rad,sy*rad);ctx.translate(0,-1);ctx.fillStyle=b.color;ctx.strokeStyle=b.color;};
+  ctx.save();T0();
+  drawWings(b,false,f.wings*acc,stillMode);
+  if(acc>.01){ctx.globalAlpha=acc;antenna(b,-1,bz*.09*rn());antenna(b,1,bz*.09*rn());ctx.globalAlpha=1;}
+  if(!G){
+    bodyPath(b);ctx.fill();
+    ctx.save();bodyPath(b);ctx.clip();
+    stripes(b,f.stripes);
+    ctx.fillStyle='#fff';eye(b,-1,blink);eye(b,1,blink);
+    ctx.restore();drawWings(b,true,f.wings,stillMode);ctx.restore();
+  }else{ // goo: en gemensam yta för kropp och droppar; ansiktet tonas bort ovanpå
+    ctx.restore();gooDraw(b);
+    if(acc>.01){ctx.save();T0();ctx.globalAlpha=acc;ctx.fillStyle='#fff';eye(b,-1,0);eye(b,1,0);ctx.restore();}
+  }
+}
+
+/* ---------- Goo: kropp och droppar som EN implicit yta (metabollar + marching squares) ---------- */
+const GT=.421875; // tröskel = (1-1/4)^3 → konturen hamnar exakt på bollens radie
+const backOut=x=>{const c=1.7;x=clamp(x,0,1)-1;return 1+(c+1)*x*x*x+c*x*x;};
+const newBall=()=>({x:0,y:0,A:1,B:1,px:null,py:null,vx:0,vy:0,w:0,wv:0,wa:0,on:false,prevPh:0,touch:false});
+function makeGoo(kind){const n=kind==='typing'?3:8;
+  return {kind,state:'bot',tau:0,want:false,auto:true,autoT:0,hold:0,acc:1,render:false,tL:0,phi:0,reform:9,
+    balls:Array.from({length:n},newBall),necks:[],bridges:[],btn:null};}
+function gooReset(G){G.balls.forEach(b=>{b.px=null;b.vx=b.vy=0;b.w=0;b.wv=0;b.touch=false;b.prevPh=0;});
+  G.necks=G.balls.slice(1).map(d=>({a:G.balls[0],b:d,broken:false,rn:0}));G.bridges=[];}
+function reformKick(b){b.v.escaleL=b.v.escaleR=.35;b.vel.splayL+=5;b.vel.splayR+=5;b.vel.lenL+=2;b.vel.lenR+=2;
+  b.vel.wangL-=6;b.vel.wangR-=6;b.vel.squash-=1.8;}
+function gooSet(G,on,hold){G.auto=false;G.want=on;G.hold=hold||0;G.autoT=0;
+  if(paused){G.state=on?'loop':'bot';G.tau=0;G.tL=.25;G.phi=.3;G.reform=9;if(on)gooReset(G);}}
+// Pose för boten medan den samlar sig / är droppar / återbildas
+function gooPose(b,q){const G=b.goo;if(!G)return;const s=G.state;
+  if(s!=='bot'){const a=s==='ant'?ss(0,.32,G.tau):1;
+    ['L','R'].forEach(x=>['splay','len','bend','open','escale','lidTop','lidBot','wfold','wang','wamp','happy','fwd','slant'].forEach(k=>delete q[k+x]));
+    Object.assign(q,{bx:0,by:0,roll:0,yaw:0,pitch:0,ox:0,oy:0,froll:0,buzz:0,alean:0,aout:0,afwd:0,gx:0,gy:0,happy:0,dart:0,blinkRate:0,shape:'circle',shapeAmt:0,
+      squash:mix(q.squash,.11,a),scale:1,open:mix(1,.1,a),lidTop:.32*a,lidBot:.22*a,slant:0,escale:mix(1,.82,a),
+      splay:mix(.62,.1,a),len:mix(.67,.4,a),bend:mix(.35,.04,a),fwd:0,wfold:a,wamp:0,wang:1.02});
+  }else if(G.reform<1.2){const r=G.reform;
+    Object.assign(q,{happy:win(r,.2,.8,.1),arch:.13,escale:1+.08*win(r,.1,.9),blinkRate:0,wamp:.25*win(r,.12,.55,.05),wfreq:9});}
+}
+function gooStep(b,dt,adv){
+  const G=b.goo;if(!G)return;const d=adv?dt:0;
+  if(adv){
+    if(G.auto){G.autoT+=dt;
+      if(G.state==='bot'&&!G.want&&G.autoT>1.8){G.want=true;G.autoT=0;}
+      else if(G.want&&G.state==='loop'&&G.autoT>3.4){G.want=false;G.autoT=0;}}
+    if(G.hold>0&&G.state==='loop'){G.hold-=dt;if(G.hold<=0)G.want=false;} // hold räknas i loopen
+    G.tau+=d;G.reform+=d;
+    const SPL=G.kind==='typing'?1.1:1.3,MRG=G.kind==='typing'?1.0:1.15;
+    if(G.state==='bot'&&G.want){G.state='ant';G.tau=0;G.autoT=0;}
+    if(G.state==='ant'){if(!G.want)G.state='bot';else if(G.tau>=.42){G.state='split';G.tau=0;G.phi=0;G.tL=0;gooReset(G);}}
+    if(G.state==='split'&&G.tau>=SPL){G.state='loop';G.tau=0;G.tL=0;G.autoT=0;}
+    if(G.state==='loop'&&!G.want){G.state='merge';G.tau=0;G.balls.forEach(x=>x.touch=false);}
+    if(G.state==='merge'&&G.tau>=MRG){G.state='bot';G.reform=0;G.autoT=0;reformKick(b);}
+    if(G.state==='loop'||G.state==='merge')G.tL+=d;
+  }
+  G.render=G.state==='split'||G.state==='loop'||G.state==='merge';
+  G.acc=G.state==='split'?1-ss(0,.22,G.tau):G.render?0:G.state==='bot'?ss(0,.12,G.reform):1;
+  if(G.render)gooLayout(b,G,d);
+}
+function gooLayout(b,G,d){
+  const v=b.v,rad=b.rad,sq=v.squash,sx=(1+sq)*v.scale,sy=v.scale/(1+sq);
+  const Cx=b.cx+v.bx*rad,Cy=b.cy+v.by*rad+rad*(1-sy),Am=sx*rad,Bm=sy*rad,s=G.state,t=G.tau,M=G.balls[0];
+  const setMain=(rm,dotR)=>{const fr=clamp((rm-dotR)/(rad-dotR),0,1);M.A=rm*mix(1,Am/rad,fr);M.B=rm*mix(1,Bm/rad,fr);};
+  const contact=(x,amt)=>{const dx=x.x-M.x,dy=x.y-M.y,dist=Math.hypot(dx,dy),gap=dist-Math.max(M.A,M.B)-x.A;
+    if(!x.touch&&gap<0&&x.A>1){x.touch=true;M.wa=Math.atan2(dy,dx);M.wv+=amt;x.wv+=amt;}};
+  if(G.kind==='typing'){
+    const rd=.27*rad,sp=.84*rad,hj=.36*rad,L=G.balls[1],R=G.balls[2];
+    let rm,ex=0,sX,sR,amp=0;
+    if(s==='split'){ex=ss(0,.35,t)*(1-ss(.5,.85,t));rm=mix(rad,rd,ss(.35,1.05,t));sX=mix(.22*rad,sp,backOut(ss(.12,.72,t)));sR=rd*mix(.35,1,ss(.1,.55,t));}
+    else if(s==='loop'){rm=rd;sX=sp;sR=rd;amp=ss(0,.35,G.tL);}
+    else{rm=mix(rd,rad,ss(.3,.92,t));sX=sp*(1-ss(.1,.6,t));sR=rd*(1-.97*ss(.58,.85,t));amp=1-ss(0,.25,t);ex=.14*win(t,.55,.85,.1);}
+    setMain(rm,rd);M.A*=1+.26*ex;M.B*=1-.2*ex;M.x=Cx;M.y=Cy;M.on=true;
+    L.x=Cx-sX;R.x=Cx+sX;L.y=R.y=Cy;L.A=L.B=R.A=R.B=sR;L.on=R.on=sR>.4;
+    [L,M,R].forEach((x,j)=>{const ph=mod(G.tL*1.3-j*.17,1);
+      if(amp>0)x.y-=amp*hj*(ph<.42?S(Math.PI*ph/.42):0);
+      if(d>0&&amp>.05){
+        if(x.prevPh<.42&&ph>=.42){x.wa=0;x.wv+=3.4*amp;}
+        if(ph<x.prevPh){x.wa=Math.PI/2;x.wv+=1.6*amp;
+          if(amp>.6)[[L,M,R][j-1],[L,M,R][j+1]].forEach(nb=>{if(nb)G.bridges.push({a:x,b:nb,age:0,life:.11,r0:.24*rd});});}}
+      x.prevPh=ph;});
+    if(s==='merge'){contact(L,2.2);contact(R,2.2);}
+  }else{
+    const NN=G.balls.length,Rr0=.7*rad,size=k=>rad*mix(.16,.065,(k/(NN-1))**.9),om=TAU*.85;
+    const oe=s==='split'?om*ss(0,1.2,t):s==='merge'?om*(1+.7*ss(0,.7,t)):om;G.phi+=oe*d;
+    const slot=k=>G.phi-k*TAU/NN-Math.PI/2;
+    let rm,d0,Rr=Rr0;
+    if(s==='split'){rm=mix(rad,.5*rad,ss(0,.75,t));rm=mix(rm,size(0),ss(.55,1.0,t));d0=Rr0*backOut(ss(.8,1.25,t));}
+    else if(s==='loop'){rm=size(0);d0=Rr0;}
+    else{Rr=Rr0*(1-ss(0,.75,t));d0=Rr;rm=mix(size(0),rad,ss(.45,1,t))*(1+.1*win(t,.75,1,.08));}
+    setMain(rm,size(0));M.x=Cx+C(slot(0))*d0;M.y=Cy+S(slot(0))*d0;M.on=true;
+    for(let k=1;k<NN;k++){const x=G.balls[k];let dist,r;
+      if(s==='split'){const tk=(NN-1-k)*.085,p=backOut(ss(tk,tk+.42,t));dist=mix(.15*rad,Rr0,p);r=size(k)*mix(.45,1,ss(tk,tk+.3,t));x.on=t>tk;}
+      else if(s==='loop'){dist=Rr0;r=size(k);x.on=true;}
+      else{dist=Rr;r=size(k)*(1-ss(.72,.95,t));x.on=r>.4;contact(x,1.3);}
+      x.x=Cx+C(slot(k))*dist;x.y=Cy+S(slot(k))*dist;x.A=x.B=r;}
+  }
+  // halsar: drar ut sig, tunnas och knipsas av med ett litet ryck (endast vid delning)
+  G.necks.forEach(n=>{const P=n.a,D=n.b;n.rn=0;if(s!=='split'||!D.on||n.broken)return;
+    const dx=D.x-P.x,dy=D.y-P.y,dist=Math.hypot(dx,dy)||1e-6,ux=dx/dist,uy=dy/dist;
+    const rP=1/Math.sqrt((ux/P.A)**2+(uy/P.B)**2),gap=dist-rP-D.A;
+    let rn=.6*D.A*(gap<=0?1:clamp(1-gap/(.95*D.A),0,1)**1.4);
+    if(gap>0&&rn<.2*D.A){n.broken=true;const an=Math.atan2(uy,ux);D.wa=an;D.wv+=4.5;P.wa=an;P.wv+=G.kind==='typing'?2.2:.7;return;}
+    n.rn=rn;n.ax=P.x+ux*rP*.4;n.ay=P.y+uy*rP*.4;});
+  G.bridges=G.bridges.filter(br=>{br.age+=d;if(br.age>br.life){br.a.wv+=.6;return false;}return true;});
+  // hastighet (töjning längs rörelsen) och efterdallring
+  G.balls.forEach(x=>{if(x.px==null){x.px=x.x;x.py=x.y;}
+    if(d>0){x.vx=mix(x.vx,(x.x-x.px)/d,.35);x.vy=mix(x.vy,(x.y-x.py)/d,.35);x.wv+=(-260*x.w-8*x.wv)*d;x.w=clamp(x.w+x.wv*d,-.4,.6);}
+    x.px=x.x;x.py=x.y;});
+}
+const sInv=(th,s)=>{const c=C(th),n=S(th),e1=1/s,e2=s,m=c*n*(e1-e2);return [c*c*e1+n*n*e2,m,m,n*n*e1+c*c*e2];};
+const mul2=(P,Q)=>[P[0]*Q[0]+P[1]*Q[2],P[0]*Q[1]+P[1]*Q[3],P[2]*Q[0]+P[3]*Q[2],P[2]*Q[1]+P[3]*Q[3]];
+function gooDraw(b){
+  const G=b.goo,cv=b.canvas,W=cv._w,H=cv._h,cell=clamp(b.rad/24,1,2.4),rad=b.rad;
+  const nx=Math.ceil(W/cell)+2,ny=Math.ceil(H/cell)+2;
+  if(!cv._gv||cv._gv.length!==nx*ny)cv._gv=new Float32Array(nx*ny);const vals=cv._gv;vals.fill(0);
+  const balls=[];let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  G.balls.forEach(x=>{if(!x.on||x.A<.35)return;
+    const sp=Math.hypot(x.vx,x.vy),sv=1+Math.min(.26,sp/(rad*16)),va=Math.atan2(x.vy,x.vx);
+    const m=mul2(mul2([1/x.A,0,0,1/x.B],sInv(x.wa,1+x.w)),sInv(va,sv));
+    const e=2.1*Math.max(x.A,x.B)*1.6;balls.push([x.x,x.y,...m]);
+    x0=Math.min(x0,x.x-e);x1=Math.max(x1,x.x+e);y0=Math.min(y0,x.y-e);y1=Math.max(y1,x.y+e);});
+  const segs=[];
+  G.necks.forEach(n=>{if(n.rn>.2)segs.push([n.ax,n.ay,n.b.x,n.b.y,n.rn]);});
+  G.bridges.forEach(br=>{const r=br.r0*(1-br.age/br.life)**.7;if(r>.2)segs.push([br.a.x,br.a.y,br.b.x,br.b.y,r]);});
+  if(!balls.length)return;
+  const i0=clamp(Math.floor(x0/cell),1,nx-2),i1=clamp(Math.ceil(x1/cell),1,nx-2),j0=clamp(Math.floor(y0/cell),1,ny-2),j1=clamp(Math.ceil(y1/cell),1,ny-2);
+  for(let j=j0;j<=j1;j++){const py=j*cell;for(let i=i0;i<=i1;i++){const px=i*cell;let f=0;
+    for(const B of balls){const dx=px-B[0],dy=py-B[1];if(abs(dx)>200||abs(dy)>200)continue;
+      const lx=B[2]*dx+B[3]*dy,ly=B[4]*dx+B[5]*dy,q=lx*lx+ly*ly;if(q<4){const z=1-q*.25;f+=z*z*z;}}
+    for(const s of segs){const ex=s[2]-s[0],ey=s[3]-s[1],ll=ex*ex+ey*ey||1e-6;let u=((px-s[0])*ex+(py-s[1])*ey)/ll;u=u<0?0:u>1?1:u;
+      const qx=px-s[0]-ex*u,qy=py-s[1]-ey*u,rr=s[4]*(1-.6*S(Math.PI*u)),q=(qx*qx+qy*qy)/(rr*rr);if(q<4){const z=1-q*.25;f+=z*z*z;}}
+    vals[j*nx+i]=f;}}
+  // marching squares → slutna konturer
+  const T=GT,sg=[];
+  for(let j=j0-1;j<=j1;j++)for(let i=i0-1;i<=i1;i++){
+    const a=j*nx+i,tl=vals[a],tr=vals[a+1],br=vals[a+nx+1],bl=vals[a+nx];
+    const c=(tl>=T?8:0)|(tr>=T?4:0)|(br>=T?2:0)|(bl>=T?1:0);if(c===0||c===15)continue;
+    const top=2*a,bot=2*(a+nx),lef=2*a+1,rig=2*(a+1)+1,mid=(tl+tr+br+bl)/4>=T;
+    switch(c){case 1:case 14:sg.push(lef,bot);break;case 2:case 13:sg.push(bot,rig);break;case 3:case 12:sg.push(lef,rig);break;
+      case 4:case 11:sg.push(top,rig);break;case 6:case 9:sg.push(top,bot);break;case 7:case 8:sg.push(lef,top);break;
+      case 5:if(mid)sg.push(lef,top,bot,rig);else sg.push(top,rig,lef,bot);break;
+      case 10:if(mid)sg.push(top,rig,lef,bot);else sg.push(lef,top,bot,rig);break;}}
+  const pt=id=>{const e=id>>1,i=e%nx,j=(e/nx)|0,v0=vals[e],v1=(id&1)?vals[e+nx]:vals[e+1],u=clamp((T-v0)/((v1-v0)||1e-6),0,1);
+    return (id&1)?[i*cell,(j+u)*cell]:[(i+u)*cell,j*cell];};
+  const adj=new Map();for(let k=0;k<sg.length;k+=2){for(const e of [sg[k],sg[k+1]]){let l=adj.get(e);if(!l)adj.set(e,l=[]);l.push(k>>1);}}
+  const used=new Uint8Array(sg.length>>1);ctx.beginPath();
+  for(let s0=0;s0<used.length;s0++){if(used[s0])continue;used[s0]=1;const start=sg[2*s0];let e=sg[2*s0+1];const loop=[pt(start)];
+    for(let guard=0;e!==start&&guard<20000;guard++){loop.push(pt(e));let nx2=-1;for(const o of adj.get(e)||[])if(!used[o]){nx2=o;break;}
+      if(nx2<0)break;used[nx2]=1;e=sg[2*nx2]===e?sg[2*nx2+1]:sg[2*nx2];}
+    if(loop.length<3)continue;const L=loop.length,m=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];let st=m(loop[L-1],loop[0]);ctx.moveTo(st[0],st[1]);
+    for(let k=0;k<L;k++){const p=loop[k],q=m(p,loop[(k+1)%L]);ctx.quadraticCurveTo(p[0],p[1],q[0],q[1]);}ctx.closePath();}
+  ctx.fillStyle=b.color;ctx.fill('evenodd');
 }
 
 /* ---------- Scener ---------- */
@@ -508,6 +671,8 @@ Object.assign(DRIVERS,{
   'v-vrid'(b,t){return {...idleHover(b,t,.3),yaw:.85*o(t,.11),pitch:.08+.22*o(t,.08,1),gx:.5*o(t,.11),dart:.04,blinkRate:.2,
       wang:.98,wamp:.12,wfreq:13};}
 });
+DRIVERS['goo-typing']=(b,t)=>idleHover(b,t,.6);
+DRIVERS['goo-spinner']=(b,t)=>idleHover(b,t,.6);
 function setupScene(el,id,idx){
   const canvases=[...el.querySelectorAll('canvas')];
   const sc={id,idx,el,canvases,bots:[],drive:DRIVERS[id],stripes:id==='rander'?true:null};
@@ -516,6 +681,8 @@ function setupScene(el,id,idx){
   cols.forEach((c,i)=>{const b=makeBot(palette[c],sc,i);b.t0=-(i*.17);sc.bots.push(b);});
   if(id==='landar')sc.bots[0].color=palette[5];
   scenes.push(sc);
+  if(id.startsWith('goo-')){const b0=sc.bots[0];b0.goo=makeGoo(id==='goo-typing'?'typing':'spinner');b0.goo.btn=el.querySelector('.js-goo');}
+  if(id==='knappar'){sc.bots[1].goo=makeGoo('spinner');sc.bots[2].goo=makeGoo('typing');sc.bots[1].goo.auto=sc.bots[2].goo.auto=false;}
   canvases.forEach(cv=>new ResizeObserver(()=>layout(sc)).observe(cv));
   return sc;
 }
@@ -533,7 +700,8 @@ function layout(sc){
   });
   renderScene(sc);
 }
-function renderScene(sc){
+function syncGooBtn(G){if(!G||!G.btn)return;const l=G.want?'Stoppa':'Starta';if(G.btn.textContent!==l){G.btn.textContent=l;G.btn.setAttribute('aria-pressed',String(G.want));}}
+function renderScene(sc){sc.bots.forEach(b=>syncGooBtn(b.goo));
   sc.canvases.forEach((cv,ci)=>{
     if(!cv._d)return;ctx=cv.getContext('2d');ctx.setTransform(cv._d,0,0,cv._d,0,0);ctx.clearRect(0,0,cv._w,cv._h);
     (sc.canvases.length>1?[sc.bots[ci]]:sc.bots).forEach(drawBot);
@@ -562,8 +730,11 @@ root.querySelectorAll('.bee-btn').forEach((btn,i)=>{
   btn.addEventListener('pointercancel',()=>release(false));
   btn.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.repeat)press();});
   btn.addEventListener('keyup',e=>{if(e.key==='Enter'||e.key===' ')release(true);});
-  btn.addEventListener('click',()=>{status.textContent='Du tryckte på '+label+'.';if(!S0.press&&b.t-S0.relT>.3&&!paused){S0.relT=b.t;S0.kickPending=true;}});
+  btn.addEventListener('click',()=>{status.textContent='Du tryckte på '+label+'.';
+    if(b.goo&&b.goo.state==='bot'&&!b.goo.want){gooSet(b.goo,true,2.5);status.textContent=b.goo.kind==='spinner'?'Söker …':'Skriver …';if(paused){settle(knappar);setTimeout(()=>{gooSet(b.goo,false);settle(knappar);},2500);}return;}if(!S0.press&&b.t-S0.relT>.3&&!paused){S0.relT=b.t;S0.kickPending=true;}});
 });
+scenes.filter(sc=>sc.id.startsWith('goo-')).forEach(sc=>{const G=sc.bots[0].goo;
+  G.btn.addEventListener('click',()=>{gooSet(G,!G.want);syncGooBtn(G);if(paused)settle(sc);});});
 const landar=scenes.find(s=>s.id==='landar');
 root.querySelector('[data-scene="landar"] .hit').addEventListener('click',()=>{const b=landar.bots[0];b.t0=b.t;b.prevU=0;if(paused)settle(landar);});
 const sCard=root.querySelector('.js-stripes-card'),sAll=root.querySelector('.js-stripes-all'),pauseBtn=root.querySelector('.js-pause');
@@ -586,7 +757,7 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 // Testkrok för skärmdumpar (ingen påverkan på vanlig användning)
-window.beeDebug={stats:()=>JSON.parse(JSON.stringify(STATS)),manual:on=>{manual=on;},advance,
+window.beeDebug={goo:()=>scenes.flatMap(sc=>sc.bots.filter(b=>b.goo).map(b=>sc.id+":"+b.goo.state+":"+b.goo.tau.toFixed(2)+":"+b.goo.hold.toFixed(2))),stats:()=>JSON.parse(JSON.stringify(STATS)),manual:on=>{manual=on;},advance,
   hover:(i,on)=>{const b=knappar.bots[i];b.st.hover=on;if(on)b.st.hoverT=b.t;},press:(i,on)=>{const b=knappar.bots[i];if(on){b.st.press=true;}else{b.st.press=false;b.st.relT=b.t;b.st.kickPending=true;}}};
 updatePause();if(paused)requestAnimationFrame(()=>scenes.forEach(settle));
 requestAnimationFrame(frame);
