@@ -498,8 +498,7 @@ function gooLayout(b,G,d){
       if(amp>0)x.y-=amp*hj*(ph<.42?S(Math.PI*ph/.42):0);
       if(d>0&&amp>.05){
         if(x.prevPh<.42&&ph>=.42){x.wa=0;x.wv+=3.4*amp;}
-        if(ph<x.prevPh){x.wa=Math.PI/2;x.wv+=1.6*amp;
-          if(amp>.6)[[L,M,R][j-1],[L,M,R][j+1]].forEach(nb=>{if(nb)G.bridges.push({a:x,b:nb,age:0,life:.11,r0:.24*rd});});}}
+        if(ph<x.prevPh){x.wa=Math.PI/2;x.wv+=1.6*amp;}}
       x.prevPh=ph;});
     if(s==='merge'){contact(L,2.2);contact(R,2.2);}
   }else{
@@ -524,6 +523,8 @@ function gooLayout(b,G,d){
     let rn=.6*D.A*(gap<=0?1:clamp(1-gap/(.95*D.A),0,1)**1.4);
     if(gap>0&&rn<.2*D.A){n.broken=true;const an=Math.atan2(uy,ux);D.wa=an;D.wv+=4.5;P.wa=an;P.wv+=G.kind==='typing'?2.2:.7;return;}
     n.rn=rn;n.ax=P.x+ux*rP*.4;n.ay=P.y+uy*rP*.4;});
+  // i loopen: dropparna ritas som separata ytor (max i stället för summa), så de aldrig smälter ihop
+  {const tg=s==='loop'?1:0;G.sep=d>0?mix(G.sep??0,tg,Math.min(1,d*5)):tg;}
   G.bridges=G.bridges.filter(br=>{br.age+=d;if(br.age>br.life){br.a.wv+=.6;return false;}return true;});
   // hastighet (töjning längs rörelsen) och efterdallring
   G.balls.forEach(x=>{if(x.px==null){x.px=x.x;x.py=x.y;}
@@ -547,9 +548,11 @@ function gooDraw(b){
   G.bridges.forEach(br=>{const r=br.r0*(1-br.age/br.life)**.7;if(r>.2)segs.push([br.a.x,br.a.y,br.b.x,br.b.y,r]);});
   if(!balls.length)return;
   const i0=clamp(Math.floor(x0/cell),1,nx-2),i1=clamp(Math.ceil(x1/cell),1,nx-2),j0=clamp(Math.floor(y0/cell),1,ny-2),j1=clamp(Math.ceil(y1/cell),1,ny-2);
-  for(let j=j0;j<=j1;j++){const py=j*cell;for(let i=i0;i<=i1;i++){const px=i*cell;let f=0;
+  const sep=G.sep||0;
+  for(let j=j0;j<=j1;j++){const py=j*cell;for(let i=i0;i<=i1;i++){const px=i*cell;let f=0,mx=0;
     for(const B of balls){const dx=px-B[0],dy=py-B[1];if(abs(dx)>200||abs(dy)>200)continue;
-      const lx=B[2]*dx+B[3]*dy,ly=B[4]*dx+B[5]*dy,q=lx*lx+ly*ly;if(q<4){const z=1-q*.25;f+=z*z*z;}}
+      const lx=B[2]*dx+B[3]*dy,ly=B[4]*dx+B[5]*dy,q=lx*lx+ly*ly;if(q<4){const z=1-q*.25,k=z*z*z;f+=k;if(k>mx)mx=k;}}
+    if(sep>0)f=f*(1-sep)+mx*sep;
     for(const s of segs){const ex=s[2]-s[0],ey=s[3]-s[1],ll=ex*ex+ey*ey||1e-6;let u=((px-s[0])*ex+(py-s[1])*ey)/ll;u=u<0?0:u>1?1:u;
       const qx=px-s[0]-ex*u,qy=py-s[1]-ey*u,rr=s[4]*(1-.6*S(Math.PI*u)),q=(qx*qx+qy*qy)/(rr*rr);if(q<4){const z=1-q*.25;f+=z*z*z;}}
     vals[j*nx+i]=f;}}
