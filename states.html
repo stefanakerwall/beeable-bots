@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beeable – lägen och tillstånd</title>
+<style>
+#bee-ex{background:#fff;color:#24231f;font:14px/1.45 system-ui,sans-serif;color-scheme:light;max-width:1040px;margin:0 auto;padding:22px 16px 40px}
+#bee-ex h1{font-size:22px;font-weight:650;margin:0 0 4px;text-align:center;letter-spacing:-.01em}
+#bee-ex .lead{text-align:center;color:#6f6a60;margin:0 auto 14px;max-width:640px}
+#bee-ex .bar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 18px}
+#bee-ex .pill{font:inherit;color:#47443c;background:#fff;border:1px solid #e6e2da;border-radius:22px;padding:8px 14px;min-height:40px;cursor:pointer}
+#bee-ex .pill[aria-pressed="true"]{background:#24231f;color:#fff;border-color:#24231f}
+#bee-ex button:focus-visible{outline:3px solid #dda63d;outline-offset:3px}
+#bee-ex .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+#bee-ex .card{margin:0;border:1px solid #efece6;border-radius:18px;padding:6px 14px 14px;display:flex;flex-direction:column}
+#bee-ex .stage{position:relative;height:210px}
+#bee-ex .stage canvas,#bee-ex .stage .hit{display:block;width:100%;height:100%}
+#bee-ex .stage .hit{padding:0;border:0;background:none;border-radius:14px;cursor:pointer}
+#bee-ex .card h2{font-size:15px;font-weight:650;margin:4px 0 2px}
+#bee-ex .card h2 span{color:#b38428;margin-right:6px}
+#bee-ex .card p{margin:0;color:#6f6a60;font-size:13px}
+#bee-ex .card .pill{align-self:flex-start;margin-top:10px;min-height:32px;padding:4px 12px;font-size:13px}
+#bee-ex .wings{margin-top:30px}
+#bee-ex .wings>h2{font-size:19px;text-align:center;margin:0 0 2px}
+#bee-ex .wings .sub{text-align:center;color:#6f6a60;margin:0 auto 14px;max-width:620px;font-size:13px}
+#bee-ex .wcards{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+#bee-ex .wcards .stage{height:190px}
+#bee-ex .demo{margin-top:28px;border:1px solid #efece6;border-radius:18px;padding:16px 14px 18px;text-align:center}
+#bee-ex .demo h2{font-size:17px;margin:0 0 2px}
+#bee-ex .demo p{margin:0 auto;color:#6f6a60;font-size:13px;max-width:620px}
+#bee-ex .btnrow{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 18px;margin:14px 0 6px}
+#bee-ex .bee-btn{font:inherit;color:#47443c;background:none;border:0;border-radius:18px;padding:2px 4px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#bee-ex .bee-btn canvas{display:block;width:118px;height:124px;pointer-events:none}
+#bee-ex .bee-btn span{font-size:13px;margin-top:-2px}
+#bee-ex .status{min-height:1.4em;color:#8a857a;font-size:13px;margin:4px 0 0}
+#bee-ex .note{color:#8a857a;font-size:12px;text-align:center;margin:18px 0 0}
+#bee-ex .wings{margin-top:30px}
+#bee-ex .wings>h2{font-size:19px;text-align:center;margin:0 0 2px}
+#bee-ex .wings .sub{text-align:center;color:#6f6a60;margin:0 auto 14px;max-width:640px;font-size:13px}
+#bee-ex .cards{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+#bee-ex .stage{height:190px}
+#bee-ex .ctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#47443c}
+#bee-ex .ctl .pill{margin:0}
+#bee-ex .ctl input{width:110px;accent-color:#24231f;vertical-align:middle}
+#bee-ex .ctl output,#bee-ex .ctl span{color:#8a857a;font-size:12px}
+#bee-ex .sm{border:1px solid #efece6;border-radius:18px;padding:12px 14px 16px;text-align:center}
+#bee-ex .sm .stage{height:340px}
+#bee-ex .sm .row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:6px 0}
+#bee-ex .sm-log{min-height:1.5em;color:#47443c;font-size:14px;margin:6px 0 0}
+#bee-ex pre{text-align:left;background:#faf8f4;border:1px solid #efece6;border-radius:12px;padding:12px 14px;overflow:auto;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#3b3934;max-width:640px;margin:14px auto 0}
+#bee-ex a{color:#9a6c12}
+</style>
+</head><body style="margin:0;background:#fff">
+<main id="bee-ex">
+  <h1>Beeable – lägen och tillstånd</h1>
+  <p class="lead">UI-lägen som animationer, och en tillståndsmaskin där varje övergång har en egen liten rörelse. Allt stannar på platsen. <a href="bee-examples.html">← Bi-exempel</a></p>
+  <div class="bar" role="group" aria-label="Visning">
+    <button type="button" class="pill js-pause" aria-pressed="false">Pausa</button>
+    <button type="button" class="pill js-wings-all" aria-pressed="true">Vingar på alla</button>
+  </div>
+  <section class="wings" aria-labelledby="ui-h" style="margin-top:6px">
+    <h2 id="ui-h">UI-lägen</h2>
+    <p class="sub">Korta loopar för vanliga lägen i ett gränssnitt.</p>
+    <div class="cards">
+      <figure class="card" data-scene="lyckat" data-col="0">
+        <div class="stage"><canvas role="img" aria-label="Beeable: lyckat."></canvas></div>
+        <figcaption><h2>Lyckat</h2><p>Ett hopp, glada bågögon, vingfladder och en liten sexkantig studs vid landningen.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="fel" data-col="3">
+        <div class="stage"><canvas role="img" aria-label="Beeable: fel."></canvas></div>
+        <figcaption><h2>Fel</h2><p>Skakar på huvudet, kniper ihop ögonen till &gt; &lt;, en taggig blixt och hängande antenner.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="forlopp" data-col="1">
+        <div class="stage"><canvas role="img" aria-label="Beeable: förlopp."></canvas></div>
+        <figcaption><h2>Förlopp</h2><p>Honung fyller kroppen med en vågig yta, och ögonen kikar ner på nivån.</p></figcaption>
+        <div class="ctl"><label>Nivå <input type="range" class="js-level" min="0" max="100" value="40"></label><output class="js-level-out">auto</output><button type="button" class="pill js-level-auto" aria-pressed="true">Auto</button></div>
+      </figure>
+      <figure class="card" data-scene="lyssnar" data-col="5">
+        <div class="stage"><canvas role="img" aria-label="Beeable: lyssnar."></canvas></div>
+        <figcaption><h2>Lyssnar</h2><p>Antennerna lutar fram och kroppen pulserar med ljudnivån (simulerad eller mikrofon).</p></figcaption>
+        <div class="ctl"><button type="button" class="pill js-mic" aria-pressed="false">Använd mikrofon</button><span class="js-mic-out" aria-live="polite">Simulerad nivå.</span></div>
+      </figure>
+      <figure class="card" data-scene="notis" data-col="4">
+        <div class="stage"><canvas role="img" aria-label="Beeable: notis."></canvas></div>
+        <figcaption><h2>Notis</h2><p>Antennspetsarna surrar och boten gör en liten dubbelstuds.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="tom" data-col="2">
+        <div class="stage"><canvas role="img" aria-label="Beeable: tom vy."></canvas></div>
+        <figcaption><h2>Tom vy</h2><p>Sömnig vila med tunga ögonlock och en gäspning då och då.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="offline" data-col="1">
+        <div class="stage"><canvas role="img" aria-label="Beeable: ingen anslutning."></canvas></div>
+        <figcaption><h2>Ingen anslutning</h2><p>Antennerna söker åt olika håll – sedan sjunker allt ihop.</p></figcaption>
+      </figure>
+      <figure class="card" data-scene="hej" data-col="0">
+        <div class="stage"><canvas role="img" aria-label="Beeable: hej."></canvas></div>
+        <figcaption><h2>Hej</h2><p>Stiger upp ur en pöl (goo), poppar upp ögonen och vinkar med en antenn.</p></figcaption>
+      </figure>
+    </div>
+  </section>
+  <section class="wings sm" aria-labelledby="sm-h" data-scene="machine" data-col="1">
+    <h2 id="sm-h">Tillstånd</h2>
+    <p class="sub">Välj ett läge. Varje byte spelar en egen övergång – loggen visar vilken.</p>
+    <div class="stage"><canvas role="img" aria-label="En större Beeable som visar aktuellt tillstånd."></canvas></div>
+    <p class="sm-log" aria-live="polite"></p>
+    <div class="row" role="group" aria-label="Tillstånd"><button type="button" class="pill" data-state="idle" aria-pressed="false">Vilar</button><button type="button" class="pill" data-state="thinking" aria-pressed="false">Tänker</button><button type="button" class="pill" data-state="working" aria-pressed="false">Arbetar</button><button type="button" class="pill" data-state="busy" aria-pressed="false">Upptagen</button><button type="button" class="pill" data-state="done" aria-pressed="false">Klar</button><button type="button" class="pill" data-state="typing" aria-pressed="false">Skriver</button><button type="button" class="pill" data-state="loading" aria-pressed="false">Laddar</button></div>
+    <div class="row"><button type="button" class="pill js-sm-auto" aria-pressed="false">Automatiskt</button></div>
+<pre><code>// Styr boten från din egen kod:
+beeState.set('working');   // idle, thinking, working, busy, done, typing, loading
+beeState.get();            // → 'working'
+beeState.auto(true);       // vandrar mellan lägen
+const off = beeState.on(e =&gt; console.log(e.from, '→', e.to));</code></pre>
+  </section>
+  <p class="note">Respekterar ”minska rörelse”: då visas stillbilder och lägen byts direkt.</p>
+</main>
+<script>
+(()=>{
+'use strict';
+const root=document.getElementById('bee-ex');
+const palette=['#DDA63D','#7294B6','#7C9F88','#C9877D','#A08BAD','#689E9E'];
+const TAU=Math.PI*2,N=96,S=Math.sin,C=Math.cos,abs=Math.abs;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,mix=(a,b,t)=>a+(b-a)*t,mod=(x,m)=>((x%m)+m)%m;
+const ss=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+const win=(u,a,b,e=.12)=>ss(a-e,a,u)*(1-ss(b,b+e,u));
+const o=(t,f,ph=0)=>S(t*TAU*f+ph);
+const hash=k=>{const x=S(k*127.1+311.7)*43758.5453;return x-Math.floor(x);};
+const gauss=()=>{let s=0;for(let i=0;i<4;i++)s+=Math.random();return (s-2)/.58;};
+const reduceQ=window.matchMedia('(prefers-reduced-motion: reduce)');
+let ctx=null;
+
+/* ---------- Former (samma som originalet, plus spetsig sexkant för vaxkakan) ---------- */
+const fromFn=f=>{const a=new Float32Array(N);for(let i=0;i<N;i++)a[i]=f(i/N*TAU);return a;};
+function polyToPolar(pts){
+  const out=new Float32Array(N);
+  for(let i=0;i<N;i++){const th=i/N*TAU,dx=C(th),dy=S(th);let best=0;
+    for(let j=0;j<pts.length;j++){const p1=pts[j],p2=pts[(j+1)%pts.length],ex=p2[0]-p1[0],ey=p2[1]-p1[1],den=dx*ey-dy*ex;
+      if(abs(den)<1e-9)continue;const t=(p1[0]*ey-p1[1]*ex)/den,s=(p1[0]*dy-p1[1]*dx)/den;if(t>0&&s>=0&&s<=1&&t>best)best=t;}
+    out[i]=best||1;}
+  return out;
+}
+const heartPts=(()=>{const p=[];for(let k=0;k<240;k++){const t=k/240*TAU;p.push([16*S(t)**3,-(13*C(t)-5*C(2*t)-2*C(3*t)-C(4*t))]);}
+  let mn=1e9,mx=-1e9;p.forEach(q=>{mn=Math.min(mn,q[1]);mx=Math.max(mx,q[1]);});const cy=(mn+mx)/2+1.2;
+  return p.map(q=>[q[0]/15.2,(q[1]-cy)/15.2]);})();
+const HEXR=1.06;
+const SHAPES={
+  circle:{face:[0,1,1],r:fromFn(()=>1)},
+  heart:{face:[-.05,.94,1],r:polyToPolar(heartPts)},
+  spiky:{face:[0,.93,1],r:fromFn(th=>{const x=th/TAU*13,k=Math.floor(x),f=x-k,tri=1-abs(2*f-1);return .95+(.1+.08*hash(k))*tri**1.4;})},
+  hexP:{face:[0,.97,1],r:fromFn(th=>HEXR*C(Math.PI/6)/C(mod(th-Math.PI/6,Math.PI/3)-Math.PI/6))}
+};
+
+/* ---------- Parametrar och fjädrar (från originalet) ---------- */
+const BODYK=['bx','by','roll','yaw','pitch','scale','squash','fy','fs','fsy','spacing','gx','gy','lean'];
+const EYEK=['open','w','h','round','lidTop','slant','curveTop','lidBot','slantBot','curveBot','happy','arch','thick','tilt','escale'];
+const ANTK=['splay','bend','len','fwd'];
+const BASE={bx:0,by:0,roll:0,yaw:0,pitch:0,scale:1,squash:0,spacing:1,gx:0,gy:0,lean:0,
+  open:1,w:.29,h:.64,round:1,lidTop:0,slant:0,curveTop:0,lidBot:0,slantBot:0,curveBot:0,happy:0,arch:.12,thick:.125,tilt:0,escale:1,
+  splay:.62,bend:.35,len:.67,fwd:0,shape:'circle',dart:.08,dartRate:1,blinkRate:.22,blinkStyle:'normal',
+  buzz:0,ox:0,oy:0,froll:0,alean:0,aout:0,afwd:0};
+/* ---------- Vingar: genomskinliga bivingar bakom kroppen (fram- och bakvinge per sida) ---------- */
+const WINGK=['wang','wfold','wsize'];               // vinkel från lodrätt, hopfällning 0–1, storlek
+const WDEF={wang:1.02,wfold:0,wsize:1,wamp:.035,wfreq:.45};  // wamp/wfreq: fladder (rad, Hz)
+const hexMix=(h1,h2,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),A=p(h1),B=p(h2);
+  return A.map((v,i)=>Math.round(v+(B[i]-v)*t));};
+function wingInit(a){const ph=Math.random()*TAU;a.wg={ph:[ph,ph],amp:[0,0],fr:[.45,.45],show:1,col:null};}
+function wingStep(a,q,dt,advance){
+  const W=a.wg;
+  ['L','R'].forEach((s,i)=>{const amp=q['wamp'+s]??q.wamp,fr=q['wfreq'+s]??q.wfreq;
+    W.amp[i]+=(amp-W.amp[i])*Math.min(1,dt*8);W.fr[i]+=(fr-W.fr[i])*Math.min(1,dt*5);
+    if(advance)W.ph[i]+=TAU*W.fr[i]*dt;});
+}
+const n3=v=>{const l=Math.hypot(v[0],v[1],v[2])||1;return [v[0]/l,v[1]/l,v[2]/l];};
+function wingPts(a,side,rear,off){
+  const g=k=>a.v[k+(side<0?'L':'R')];
+  const fold=clamp(g('wfold'),0,1),size=Math.max(.3,g('wsize'));
+  const ang=g('wang')+(rear?.62:0)+off*(rear?.8:1);
+  const L=(rear?.6:.88)*size*(1-.25*fold),Wd=(rear?.24:.32)*size;
+  const r0=[side*(rear?.5:.46),rear?-.34:-.5,-.6];
+  const d=n3([side*(S(ang)*(1-fold)+.16*fold),-C(ang)*(1-fold)+.22*fold,-.2*(1-fold)-fold]);
+  const w=n3([d[1]-d[2]*fold,-d[0],d[0]*fold]);
+  const R0=rot(a,...r0),k=rShape(a,Math.atan2(R0[1],R0[0]))-1,ox=R0[0]*k,oy=R0[1]*k;
+  const K=30,pts=[];let zs=0;
+  for(let j=0;j<K;j++){const t=j/K*TAU,u=(1-C(t))/2,v=S(t)*Wd/2*Math.pow(u,.5)*(S(t)>0?1:.72);
+    const P=rot(a,r0[0]+d[0]*u*L+w[0]*v,r0[1]+d[1]*u*L+w[1]*v,r0[2]+d[2]*u*L+w[2]*v);pts.push([P[0]+ox,P[1]+oy]);zs+=P[2];}
+  const at=(u,v)=>{const P=rot(a,r0[0]+d[0]*u*L+w[0]*v,r0[1]+d[1]*u*L+w[1]*v,r0[2]+d[2]*u*L+w[2]*v);return [P[0]+ox,P[1]+oy];};
+  return {pts,z:zs/K,at,Wd};
+}
+// front=false: vingar bakom kroppen (ritas först); front=true: vingar som vridits fram (ritas sist)
+function drawWings(a,front,show,still){
+  if(show<.01)return;
+  ctx.save();
+  const W=a.wg;if(W.col!==a.color){W.col=a.color;const f=hexMix(a.color,'#ffffff',.6),e=hexMix(a.color,'#24231f',.2);
+    W.fill='rgb('+f+')';W.edge='rgb('+e+')';}
+  for(const rear of [true,false])for(const side of [-1,1]){
+    const i=side<0?0:1,amp=W.amp[i],fr=W.fr[i];
+    const blur=ss(5,11,fr)*clamp(amp/.05,0,1),n=blur>.05?5:1;
+    const probe=wingPts(a,side,rear,0);if((probe.z>.05)!==front)continue;
+    for(let c=0;c<n;c++){
+      let off=n>1?amp*(2*c/(n-1)-1)*blur+amp*S(W.ph[i])*(1-blur):amp*S(W.ph[i]);
+      if(n>1&&!still)off+=amp*.25*(Math.random()*2-1);
+      const g=wingPts(a,side,rear,off),p=g.pts;
+      ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(let j=1;j<p.length;j++)ctx.lineTo(p[j][0],p[j][1]);ctx.closePath();
+      ctx.globalAlpha=show*(n>1?.2:(rear?.48:.55));ctx.fillStyle=W.fill;ctx.fill();
+      ctx.globalAlpha=show*(n>1?.12:.5);ctx.strokeStyle=W.edge;ctx.lineWidth=.026;ctx.lineJoin='round';ctx.stroke();
+      if(n===1||c===2){ // svaga ådror
+        ctx.globalAlpha=show*(n>1?.1:.28);ctx.lineWidth=.016;ctx.beginPath();
+        const A=g.at(.05,0),B=g.at(.82,g.Wd*.05),Cc=g.at(.38,0),D=g.at(.7,g.Wd*.32);
+        ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.moveTo(Cc[0],Cc[1]);ctx.lineTo(D[0],D[1]);
+        if(!rear){const E=g.at(.5,0),F=g.at(.78,-g.Wd*.26);ctx.moveTo(E[0],E[1]);ctx.lineTo(F[0],F[1]);}
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
+Object.assign(BASE,WDEF);
+const KEYS=[...BODYK];WINGK.forEach(k=>KEYS.push(k+'L',k+'R'));EYEK.forEach(k=>KEYS.push(k+'L',k+'R'));ANTK.forEach(k=>KEYS.push(k+'L',k+'R'));
+const SPR={bx:[160,15],by:[160,15],roll:[120,13],yaw:[110,15],pitch:[110,15],scale:[170,12],squash:[260,11],
+  fy:[120,18],fs:[120,18],fsy:[120,18],spacing:[150,18],gx:[520,32],gy:[520,32],lean:[100,6.5]};
+const springOf=k=>{if(SPR[k])return SPR[k];const b=k.slice(0,-1);
+  if(WINGK.includes(b))return [95,7.5];
+  if(b==='escale')return [320,15];if(b==='open')return [420,30];if(b==='happy')return [220,22];
+  if(ANTK.includes(b))return [105,6.5];return [280,24];};
+
+let paused=reduceQ.matches,stripesAll=false,wingsAll=true;
+
+function makeBot(color,scene,i){
+  const seed=hash(i*7.3+scene.idx*13.1);
+  const b={i,color,scene,seed,t:0,t0:0,v:{},vel:{},sr:new Float32Array(N).fill(1),sv:new Float32Array(N),rr:new Float32Array(N),
+    prevX:0,prevY:0,pvx:0,pvy:0,pyawv:0,stepped:false,cx:0,cy:0,rad:40,
+    blink:{on:false,start:0,dur:.17,hold:0,next:1+seed*3,type:'normal',dbl:false},
+    sac:{x:0,y:0,ax:0,ay:0,until:0,next:0},
+    fx:{wings:1,buzz:0,ox:0,oy:0,froll:0,alean:0,aout:0,afwd:0,stripes:0},st:{hover:false,press:false,hoverT:-9,relT:-9,pressT:-9},prevU:0};
+  KEYS.forEach(k=>{const base=k.replace(/[LR]$/,'');b.v[k]=k in BASE?BASE[k]:(base in BASE&&!BODYK.includes(k)?BASE[base]:0);b.vel[k]=0;});
+  b.v.fs=1;b.v.fsy=1;b.v.fy=0;wingInit(b);
+  return b;
+}
+
+/* ---------- Blinkningar (från originalet) ---------- */
+function blinkAmount(a){
+  const B=a.blink;if(!B.on)return 0;
+  const tau=a.t-B.start,cl=B.dur*.38,op=B.dur*.62;
+  if(tau<cl)return ss(0,cl,tau);if(tau<cl+B.hold)return 1;return 1-ss(cl+B.hold,cl+B.hold+op,tau);
+}
+function updateBlink(a,R){
+  const B=a.blink;
+  if(!B.on&&a.t>=B.next&&R.blinkRate>0){B.on=true;B.start=a.t;B.type=R.blinkStyle;
+    B.dur={normal:.17,slow:.5}[B.type]||.17;B.hold=B.type==='slow'?.08:0;
+    if(B.type==='normal'&&!B.dbl&&Math.random()<.2)B.dbl=true;}
+  if(B.on&&a.t-B.start>B.dur+B.hold){B.on=false;
+    if(B.dbl){B.dbl=false;B.next=a.t+.08;}
+    else B.next=a.t+(R.blinkRate>0?(-Math.log(1-Math.random())/R.blinkRate)+.25:1e9);}
+}
+
+/* ---------- Kick: landningsstöt i kropp och kontur ---------- */
+function kick(b,amt){b.vel.squash+=amt;b.vel.wangL+=amt*1.8;b.vel.wangR+=amt*1.8;for(let i=0;i<N;i++)b.sv[i]+=amt*.22*C(2*i/N*TAU);}
+
+/* ---------- Ett simuleringssteg ---------- */
+function step(b,dt,advance){
+  if(advance)b.t+=dt;
+  const q=Object.assign({},BASE,b.scene.drive(b,b.t-b.t0,advance));
+  if(WX[b.scene.id])Object.assign(q,WX[b.scene.id](b,b.t-b.t0,q));
+  if(b.goo)gooPose(b,q);
+  const T={};
+  BODYK.forEach(k=>T[k]=q[k]);
+  EYEK.forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
+  ANTK.concat(WINGK).forEach(k=>{T[k+'L']=q[k+'L']??q[k];T[k+'R']=q[k+'R']??q[k];});
+  const shape=q.shape,amt=q.shapeAmt??(shape==='circle'?0:1),sf=SHAPES[shape].face;
+  T.fy=mix(0,sf[0],amt);T.fs=mix(1,sf[1],amt);T.fsy=mix(1,sf[2],amt);
+  if(advance){
+    updateBlink(b,q);
+    const Sc=b.sac;
+    if(b.t>=Sc.next){const nx=gauss()*q.dart,ny=gauss()*q.dart*.6;Sc.ax=Sc.x-(nx-Sc.x)*.35;Sc.ay=Sc.y-(ny-Sc.y)*.35;Sc.until=b.t+.05;
+      Sc.x=nx;Sc.y=ny;Sc.next=b.t+(.3+Math.random()*1.3)/Math.max(.2,q.dartRate);}
+    const pre=b.t<Sc.until;T.gx+=(pre?Sc.ax:Sc.x)+.02*S(b.t*4.7+b.seed*9);T.gy+=(pre?Sc.ay:Sc.y)+.015*S(b.t*3.9+b.seed*4);
+  }
+  KEYS.forEach(k=>{const [K,D]=springOf(k);let w=b.vel[k];w+=(K*(T[k]-b.v[k])-D*w)*dt;b.vel[k]=w;b.v[k]+=w*dt;});
+  const sh=SHAPES[shape];
+  for(let i=0;i<N;i++){const tr=1+(sh.r[i]-1)*amt;b.sv[i]+=(150*(tr-b.sr[i])-11*b.sv[i])*dt;b.sr[i]+=b.sv[i]*dt;}
+  // antennernas eftersläp när kroppen rör sig (från originalet)
+  const X=b.v.bx,Y=b.v.by,vx=(X-b.prevX)/dt,vy=(Y-b.prevY)/dt,yv=b.vel.yaw;
+  if(b.stepped){const dvx=clamp(vx-b.pvx,-6,6),dvy=clamp(vy-b.pvy,-6,6),dyw=clamp(yv-b.pyawv,-6,6);
+    b.vel.splayL+=-dvy*.8;b.vel.splayR+=-dvy*.8;b.vel.bendL+=-dvy*.4;b.vel.bendR+=-dvy*.4;b.vel.lean+=-dvx*1.1-dyw*.25;
+    b.vel.wangL+=-dvy*1.3+dvx*.5;b.vel.wangR+=-dvy*1.3-dvx*.5;}
+  b.prevX=X;b.prevY=Y;b.pvx=vx;b.pvy=vy;b.pyawv=yv;b.stepped=true;
+  b.v.squash=Math.max(-.35,b.v.squash);
+  const f=b.fx,k=Math.min(1,dt*28);
+  f.buzz+=(q.buzz-f.buzz)*k;
+  f.abuzz=q.abuzz||0;f.ox=q.ox;f.oy=q.oy;f.froll=q.froll;f.alean=q.alean;f.aout=q.aout;f.afwd=q.afwd;
+  const sOn=b.scene.stripes!=null?(b.scene.stripes||stripesAll):stripesAll;
+  f.stripes+=((sOn?1:0)-f.stripes)*Math.min(1,dt*6);
+  const wOn=b.scene.wings||wingsAll;f.wings+=((wOn?1:0)-f.wings)*Math.min(1,dt*6);
+  wingStep(b,q,dt,advance);
+  if(b.goo)gooStep(b,dt,advance);
+}
+
+/* ---------- Ritning (från originalet, plus surr, ränder och direkta förskjutningar) ---------- */
+function rot(a,x,y,z){const cy=C(a.v.yaw),sy=S(a.v.yaw),cp=C(a.v.pitch),sp=S(a.v.pitch);
+  const y1=y*cp-z*sp,z1=y*sp+z*cp;return [x*cy+z1*sy,y1,-x*sy+z1*cy];}
+function rShape(a,ang){const f=mod(ang,TAU)/TAU*N,i=Math.floor(f)%N,j=(i+1)%N,u=f-Math.floor(f);return mix(a.rr[i],a.rr[j],u);}
+function bodyPath(a){
+  const r=a.rr,pts=[];for(let i=0;i<N;i++){const th=i/N*TAU;pts.push([r[i]*C(th),r[i]*S(th)]);}
+  ctx.beginPath();const m=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];let s=m(pts[N-1],pts[0]);ctx.moveTo(s[0],s[1]);
+  for(let i=0;i<N;i++){const p=pts[i],q=m(p,pts[(i+1)%N]);ctx.quadraticCurveTo(p[0],p[1],q[0],q[1]);}
+  ctx.closePath();
+}
+function antenna(a,side,jit){
+  const g=k=>a.v[k+(side<0?'L':'R')],f=a.fx;
+  const A=side*(g('splay')+f.aout)+a.v.lean+f.alean+jit,B=side*g('bend'),L=g('len'),F=g('fwd')+f.afwd;
+  const r0=[side*.43,-.85,.305],dir=(th,ff)=>[S(th)*C(ff),-C(th)*C(ff),S(ff)];
+  const d1=dir(A-B,F*.6),d2=dir(A,F);
+  const c3=[r0[0]+L*.49*d1[0],r0[1]+L*.49*d1[1],r0[2]+L*.49*d1[2]],t3=[r0[0]+L*d2[0],r0[1]+L*d2[1],r0[2]+L*d2[2]];
+  const R=rot(a,...r0),Cc=rot(a,...c3),Tt=rot(a,...t3);
+  const k=rShape(a,Math.atan2(R[1],R[0]))-1,ox=R[0]*k,oy=R[1]*k;
+  ctx.lineWidth=.085;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(R[0]+ox,R[1]+oy);ctx.quadraticCurveTo(Cc[0]+ox,Cc[1]+oy,Tt[0]+ox,Tt[1]+oy);ctx.stroke();
+  ctx.save();ctx.translate(Tt[0]+ox,Tt[1]+oy);ctx.scale(1/(1+a.v.squash),1+a.v.squash);ctx.beginPath();ctx.arc(0,0,.13,0,TAU);ctx.fill();ctx.restore();
+}
+// Latitudband på klotet: roteras med yaw/pitch, mappas på kroppsformen och följer squash via kroppens transform
+const BANDS=[[-.66,-.55],[.4,.54],[.68,.82]],TILT=.09;
+function latPoint(a,y,phi){
+  const r=Math.sqrt(Math.max(0,1-y*y));let x=r*S(phi),yy=y,z=r*C(phi);
+  const xt=x*C(TILT)-yy*S(TILT);yy=x*S(TILT)+yy*C(TILT);x=xt;
+  return rot(a,x,yy,z);
+}
+function stripes(a,amt){
+  if(amt<.01)return;
+  ctx.save();ctx.fillStyle='rgba(36,35,31,'+(.15*amt).toFixed(3)+')';
+  const phiC=Math.atan2(-S(a.v.yaw),C(a.v.pitch)*C(a.v.yaw)),K=64;
+  for(const [y1,y2] of BANDS){
+    const edge=y=>{const out=[];for(let k=0;k<=K;k++){const p=latPoint(a,y,phiC-Math.PI+k/K*TAU);
+      if(p[2]>-.04){const s=rShape(a,Math.atan2(p[1],p[0]));out.push([p[0]*s,p[1]*s]);}}return out;};
+    const e1=edge(y1),e2=edge(y2);if(e1.length<2&&e2.length<2)continue;
+    ctx.beginPath();const all=e1.concat(e2.reverse());ctx.moveTo(all[0][0],all[0][1]);for(const p of all)ctx.lineTo(p[0],p[1]);ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+}
+function eye(a,side,blink){
+  const g=k=>a.v[k+(side<0?'L':'R')],v=a.v;
+  const RF=.8,bx=(side*.28*v.spacing+v.gx*.16)/RF,by=v.gy*.16/RF,bz=Math.sqrt(Math.max(.02,1-bx*bx-by*by));
+  const p=rot(a,bx,by,bz);if(p[2]<=.02)return;p[0]*=RF;p[1]*=RF;
+  const rx=.28*v.spacing/RF,rest=Math.sqrt(1-rx*rx),f=Math.min(1.04,p[2]/rest),phi=Math.atan2(p[1],p[0]);
+  ctx.save();ctx.translate(p[0]*v.fs,p[1]*v.fs+v.fy);
+  ctx.rotate(phi);ctx.scale(f,1);ctx.rotate(-phi);
+  ctx.scale(v.fs,v.fs*v.fsy);ctx.rotate(side*g('tilt'));
+  const sm=clamp(abs(a.vel.gx)*.012+abs(a.vel.gy)*.006,0,.22);ctx.scale(1+sm,1-sm*.5);
+  const sc=Math.max(.2,g('escale')),A=g('w')/2*sc,b0=g('h')/2*sc*Math.max(0,g('open')),b=b0*(1-blink),shiftY=blink*b0*.28;
+  const ah=(g('w')/2+.045)*sc,hp=clamp(g('happy'),0,1),arch=g('arch'),thick=g('thick');
+  const rc=Math.min(A,Math.max(b,1e-4))*clamp(g('round'),0,1);
+  const lt0=g('lidTop'),sl=g('slant'),ct=g('curveTop'),lb0=g('lidBot'),slb=g('slantBot'),cb=g('curveBot');
+  const K=26,top=[],bot=[];
+  for(let j=0;j<=K;j++){
+    const u=-C(Math.PI*j/K),x=u*A,ax=abs(x),q=1-u*u;
+    let env;if(ax<=A-rc)env=b;else{const d=ax-(A-rc);env=b-rc+Math.sqrt(Math.max(0,rc*rc-d*d));}
+    const inner=-side*u;
+    const qq=1-.62*u*u,lt=-b+lt0*2*b+sl*inner*b+ct*qq*b,lb=b-lb0*2*b+slb*inner*b-cb*qq*b;
+    let t1=Math.max(-env,lt),b1=Math.min(env,lb);
+    const minT=.045*sc*Math.sqrt(q);
+    if(b1-t1<minT){const m=clamp((t1+b1)/2,-env,env);t1=m-minT/2;b1=m+minT/2;}
+    const yc=arch*(.33-q)*sc+blink*.02,ht=thick*.5*sc*Math.pow(q,.18)*(1-blink*.55);
+    const X=mix(x,u*ah,hp);
+    top.push([X,mix(t1+shiftY,yc-ht,hp)]);bot.push([X,mix(b1+shiftY,yc+ht,hp)]);
+  }
+  ctx.beginPath();ctx.moveTo(top[0][0],top[0][1]);
+  for(let j=1;j<=K;j++)ctx.lineTo(top[j][0],top[j][1]);
+  for(let j=K;j>=0;j--)ctx.lineTo(bot[j][0],bot[j][1]);
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+const STATS={};
+function drawBot(b){
+  const v=b.v,f=b.fx,rad=b.rad,stillMode=paused;
+  // Surr: snabb, liten slumpdarrning per bildruta i position, vinkel, kontur och antenner
+  const bz=stillMode?0:f.buzz,rn=()=>Math.random()*2-1;
+  const jx=bz*.022*rn(),jy=bz*.016*rn(),jr=bz*.03*rn(),p1=Math.random()*TAU,p2=Math.random()*TAU;
+  for(let i=0;i<N;i++){const th=i/N*TAU;b.rr[i]=b.sr[i]*(1+bz*(.012*S(5*th+p1)+.008*S(9*th+p2)));}
+  const blink=stillMode?0:blinkAmount(b);
+  const sq=v.squash,sx=(1+sq)*v.scale,sy=v.scale/(1+sq);
+  const dx=v.bx+f.ox+jx,dy=v.by+f.oy+jy; // ankarpunktens förflyttning i radier
+  const st=STATS[b.scene.id]||(STATS[b.scene.id]={dx:0,dy:0});
+  if(b.t>1){st.dx=Math.max(st.dx,abs(dx));st.dy=Math.max(st.dy,abs(dy));}
+  const G=b.goo&&b.goo.render,acc=b.goo?b.goo.acc:1;
+  const T0=()=>{ctx.translate(b.cx+(v.bx+f.ox+jx)*rad,b.cy+(v.by+f.oy+jy)*rad);ctx.rotate(v.roll+f.froll+jr);
+    ctx.translate(0,rad);ctx.scale(sx*rad,sy*rad);ctx.translate(0,-1);ctx.fillStyle=b.color;ctx.strokeStyle=b.color;};
+  ctx.save();T0();
+  drawWings(b,false,f.wings*acc,stillMode);
+  if(acc>.01){ctx.globalAlpha=acc;const ab=stillMode?0:f.abuzz*.16;antenna(b,-1,bz*.09*rn()+ab*rn());antenna(b,1,bz*.09*rn()+ab*rn());ctx.globalAlpha=1;}
+  if(!G){
+    bodyPath(b);ctx.fill();
+    ctx.save();bodyPath(b);ctx.clip();
+    stripes(b,f.stripes);
+    if(b.honey)drawHoney(b);
+    ctx.fillStyle='#fff';eye(b,-1,blink);eye(b,1,blink);
+    ctx.restore();drawWings(b,true,f.wings,stillMode);ctx.restore();
+  }else{ // goo: en gemensam yta för kropp och droppar; ansiktet tonas bort ovanpå
+    ctx.restore();gooDraw(b);
+    if(acc>.01){ctx.save();T0();ctx.globalAlpha=acc;ctx.fillStyle='#fff';eye(b,-1,0);eye(b,1,0);ctx.restore();}
+  }
+}
+
+/* ---------- Goo: kropp och droppar som EN implicit yta (metabollar + marching squares) ---------- */
+const GT=.421875; // tröskel = (1-1/4)^3 → konturen hamnar exakt på bollens radie
+const backOut=x=>{const c=1.7;x=clamp(x,0,1)-1;return 1+(c+1)*x*x*x+c*x*x;};
+const newBall=()=>({x:0,y:0,A:1,B:1,px:null,py:null,vx:0,vy:0,w:0,wv:0,wa:0,on:false,prevPh:0,touch:false});
+function makeGoo(kind){const n=kind==='typing'?3:8;
+  return {kind,state:'bot',tau:0,want:false,auto:true,autoT:0,hold:0,acc:1,render:false,tL:0,phi:0,reform:9,
+    balls:Array.from({length:n},newBall),necks:[],bridges:[],btn:null};}
+function gooReset(G){G.balls.forEach(b=>{b.px=null;b.vx=b.vy=0;b.w=0;b.wv=0;b.touch=false;b.prevPh=0;});
+  G.necks=G.balls.slice(1).map(d=>({a:G.balls[0],b:d,broken:false,rn:0}));G.bridges=[];}
+function reformKick(b){b.v.escaleL=b.v.escaleR=.35;b.vel.splayL+=5;b.vel.splayR+=5;b.vel.lenL+=2;b.vel.lenR+=2;
+  b.vel.wangL-=6;b.vel.wangR-=6;b.vel.squash-=1.8;}
+function gooSet(G,on,hold){G.auto=false;G.want=on;G.hold=hold||0;G.autoT=0;
+  if(paused){G.state=on?'loop':'bot';G.tau=0;G.tL=.25;G.phi=.3;G.reform=9;if(on)gooReset(G);}}
+// Pose för boten medan den samlar sig / är droppar / återbildas
+function gooPose(b,q){const G=b.goo;if(!G)return;const s=G.state;
+  if(s!=='bot'){const a=s==='ant'?ss(0,.32,G.tau):1;
+    ['L','R'].forEach(x=>['splay','len','bend','open','escale','lidTop','lidBot','wfold','wang','wamp','happy','fwd','slant'].forEach(k=>delete q[k+x]));
+    Object.assign(q,{bx:0,by:0,roll:0,yaw:0,pitch:0,ox:0,oy:0,froll:0,buzz:0,alean:0,aout:0,afwd:0,gx:0,gy:0,happy:0,dart:0,blinkRate:0,shape:'circle',shapeAmt:0,
+      squash:mix(q.squash,.11,a),scale:1,open:mix(1,.1,a),lidTop:.32*a,lidBot:.22*a,slant:0,escale:mix(1,.82,a),
+      splay:mix(.62,.1,a),len:mix(.67,.4,a),bend:mix(.35,.04,a),fwd:0,wfold:a,wamp:0,wang:1.02});
+  }else if(G.reform<1.2){const r=G.reform;
+    Object.assign(q,{happy:win(r,.2,.8,.1),arch:.13,escale:1+.08*win(r,.1,.9),blinkRate:0,wamp:.25*win(r,.12,.55,.05),wfreq:9});}
+}
+function gooStep(b,dt,adv){
+  const G=b.goo;if(!G)return;const d=adv?dt:0;
+  if(G.custom){G.custom(b,G,d,adv);return;}
+  if(adv){
+    if(G.auto){G.autoT+=dt;
+      if(G.state==='bot'&&!G.want&&G.autoT>1.8){G.want=true;G.autoT=0;}
+      else if(G.want&&G.state==='loop'&&G.autoT>3.4){G.want=false;G.autoT=0;}}
+    if(G.hold>0&&G.state==='loop'){G.hold-=dt;if(G.hold<=0)G.want=false;} // hold räknas i loopen
+    G.tau+=d;G.reform+=d;
+    const SPL=G.kind==='typing'?1.1:1.3,MRG=G.kind==='typing'?1.0:1.15;
+    if(G.state==='bot'&&G.want){G.state='ant';G.tau=0;G.autoT=0;}
+    if(G.state==='ant'){if(!G.want)G.state='bot';else if(G.tau>=.42){G.state='split';G.tau=0;G.phi=0;G.tL=0;gooReset(G);}}
+    if(G.state==='split'&&G.tau>=SPL){G.state='loop';G.tau=0;G.tL=0;G.autoT=0;}
+    if(G.state==='loop'&&!G.want){G.state='merge';G.tau=0;G.balls.forEach(x=>x.touch=false);}
+    if(G.state==='merge'&&G.tau>=MRG){G.state='bot';G.reform=0;G.autoT=0;reformKick(b);}
+    if(G.state==='loop'||G.state==='merge')G.tL+=d;
+  }
+  G.render=G.state==='split'||G.state==='loop'||G.state==='merge';
+  G.acc=G.state==='split'?1-ss(0,.22,G.tau):G.render?0:G.state==='bot'?ss(0,.12,G.reform):1;
+  if(G.render)gooLayout(b,G,d);
+}
+function gooLayout(b,G,d){
+  const v=b.v,rad=b.rad,sq=v.squash,sx=(1+sq)*v.scale,sy=v.scale/(1+sq);
+  const Cx=b.cx+v.bx*rad,Cy=b.cy+v.by*rad+rad*(1-sy),Am=sx*rad,Bm=sy*rad,s=G.state,t=G.tau,M=G.balls[0];
+  const setMain=(rm,dotR)=>{const fr=clamp((rm-dotR)/(rad-dotR),0,1);M.A=rm*mix(1,Am/rad,fr);M.B=rm*mix(1,Bm/rad,fr);};
+  const contact=(x,amt)=>{const dx=x.x-M.x,dy=x.y-M.y,dist=Math.hypot(dx,dy),gap=dist-Math.max(M.A,M.B)-x.A;
+    if(!x.touch&&gap<0&&x.A>1){x.touch=true;M.wa=Math.atan2(dy,dx);M.wv+=amt;x.wv+=amt;}};
+  if(G.kind==='typing'){
+    const rd=.27*rad,sp=.84*rad,hj=.36*rad,L=G.balls[1],R=G.balls[2];
+    let rm,ex=0,sX,sR,amp=0;
+    if(s==='split'){ex=ss(0,.35,t)*(1-ss(.5,.85,t));rm=mix(rad,rd,ss(.35,1.05,t));sX=mix(.22*rad,sp,backOut(ss(.12,.72,t)));sR=rd*mix(.35,1,ss(.1,.55,t));}
+    else if(s==='loop'){rm=rd;sX=sp;sR=rd;amp=ss(0,.35,G.tL);}
+    else{rm=mix(rd,rad,ss(.3,.92,t));sX=sp*(1-ss(.1,.6,t));sR=rd*(1-.97*ss(.58,.85,t));amp=1-ss(0,.25,t);ex=.14*win(t,.55,.85,.1);}
+    setMain(rm,rd);M.A*=1+.26*ex;M.B*=1-.2*ex;M.x=Cx;M.y=Cy;M.on=true;
+    L.x=Cx-sX;R.x=Cx+sX;L.y=R.y=Cy;L.A=L.B=R.A=R.B=sR;L.on=R.on=sR>.4;
+    [L,M,R].forEach((x,j)=>{const ph=mod(G.tL*1.3-j*.17,1);
+      if(amp>0)x.y-=amp*hj*(ph<.42?S(Math.PI*ph/.42):0);
+      if(d>0&&amp>.05){
+        if(x.prevPh<.42&&ph>=.42){x.wa=0;x.wv+=3.4*amp;}
+        if(ph<x.prevPh){x.wa=Math.PI/2;x.wv+=1.6*amp;
+          if(amp>.6)[[L,M,R][j-1],[L,M,R][j+1]].forEach(nb=>{if(nb)G.bridges.push({a:x,b:nb,age:0,life:.11,r0:.24*rd});});}}
+      x.prevPh=ph;});
+    if(s==='merge'){contact(L,2.2);contact(R,2.2);}
+  }else if(G.layout){G.layout(b,G,{Cx,Cy,Am,Bm,rad,contact});
+  }else{
+    const NN=G.balls.length,Rr0=.7*rad,size=k=>rad*mix(.16,.065,(k/(NN-1))**.9),om=TAU*.85;
+    const oe=s==='split'?om*ss(0,1.2,t):s==='merge'?om*(1+.7*ss(0,.7,t)):om;G.phi+=oe*d;
+    const slot=k=>G.phi-k*TAU/NN-Math.PI/2;
+    let rm,d0,Rr=Rr0;
+    if(s==='split'){rm=mix(rad,.5*rad,ss(0,.75,t));rm=mix(rm,size(0),ss(.55,1.0,t));d0=Rr0*backOut(ss(.8,1.25,t));}
+    else if(s==='loop'){rm=size(0);d0=Rr0;}
+    else{Rr=Rr0*(1-ss(0,.75,t));d0=Rr;rm=mix(size(0),rad,ss(.45,1,t))*(1+.1*win(t,.75,1,.08));}
+    setMain(rm,size(0));M.x=Cx+C(slot(0))*d0;M.y=Cy+S(slot(0))*d0;M.on=true;
+    for(let k=1;k<NN;k++){const x=G.balls[k];let dist,r;
+      if(s==='split'){const tk=(NN-1-k)*.085,p=backOut(ss(tk,tk+.42,t));dist=mix(.15*rad,Rr0,p);r=size(k)*mix(.45,1,ss(tk,tk+.3,t));x.on=t>tk;}
+      else if(s==='loop'){dist=Rr0;r=size(k);x.on=true;}
+      else{dist=Rr;r=size(k)*(1-ss(.72,.95,t));x.on=r>.4;contact(x,1.3);}
+      x.x=Cx+C(slot(k))*dist;x.y=Cy+S(slot(k))*dist;x.A=x.B=r;}
+  }
+  // halsar: drar ut sig, tunnas och knipsas av med ett litet ryck (endast vid delning)
+  G.necks.forEach(n=>{const P=n.a,D=n.b;n.rn=0;if(s!=='split'||!D.on||n.broken)return;
+    const dx=D.x-P.x,dy=D.y-P.y,dist=Math.hypot(dx,dy)||1e-6,ux=dx/dist,uy=dy/dist;
+    const rP=1/Math.sqrt((ux/P.A)**2+(uy/P.B)**2),gap=dist-rP-D.A;
+    let rn=.6*D.A*(gap<=0?1:clamp(1-gap/(.95*D.A),0,1)**1.4);
+    if(gap>0&&rn<.2*D.A){n.broken=true;const an=Math.atan2(uy,ux);D.wa=an;D.wv+=4.5;P.wa=an;P.wv+=G.kind==='typing'?2.2:.7;return;}
+    n.rn=rn;n.ax=P.x+ux*rP*.4;n.ay=P.y+uy*rP*.4;});
+  G.bridges=G.bridges.filter(br=>{br.age+=d;if(br.age>br.life){br.a.wv+=.6;return false;}return true;});
+  // hastighet (töjning längs rörelsen) och efterdallring
+  G.balls.forEach(x=>{if(x.px==null){x.px=x.x;x.py=x.y;}
+    if(d>0){x.vx=mix(x.vx,(x.x-x.px)/d,.35);x.vy=mix(x.vy,(x.y-x.py)/d,.35);x.wv+=(-260*x.w-8*x.wv)*d;x.w=clamp(x.w+x.wv*d,-.4,.6);}
+    x.px=x.x;x.py=x.y;});
+}
+const sInv=(th,s)=>{const c=C(th),n=S(th),e1=1/s,e2=s,m=c*n*(e1-e2);return [c*c*e1+n*n*e2,m,m,n*n*e1+c*c*e2];};
+const mul2=(P,Q)=>[P[0]*Q[0]+P[1]*Q[2],P[0]*Q[1]+P[1]*Q[3],P[2]*Q[0]+P[3]*Q[2],P[2]*Q[1]+P[3]*Q[3]];
+function gooDraw(b){
+  const G=b.goo,cv=b.canvas,W=cv._w,H=cv._h,cell=clamp(b.rad/24,1,2.4),rad=b.rad;
+  const nx=Math.ceil(W/cell)+2,ny=Math.ceil(H/cell)+2;
+  if(!cv._gv||cv._gv.length!==nx*ny)cv._gv=new Float32Array(nx*ny);const vals=cv._gv;vals.fill(0);
+  const balls=[];let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  G.balls.forEach(x=>{if(!x.on||x.A<.35)return;
+    const sp=Math.hypot(x.vx,x.vy),sv=1+Math.min(.26,sp/(rad*16)),va=Math.atan2(x.vy,x.vx);
+    const m=mul2(mul2([1/x.A,0,0,1/x.B],sInv(x.wa,1+x.w)),sInv(va,sv));
+    const e=2.1*Math.max(x.A,x.B)*1.6;balls.push([x.x,x.y,...m]);
+    x0=Math.min(x0,x.x-e);x1=Math.max(x1,x.x+e);y0=Math.min(y0,x.y-e);y1=Math.max(y1,x.y+e);});
+  const segs=[];
+  G.necks.forEach(n=>{if(n.rn>.2)segs.push([n.ax,n.ay,n.b.x,n.b.y,n.rn]);});
+  G.bridges.forEach(br=>{const r=br.r0*(1-br.age/br.life)**.7;if(r>.2)segs.push([br.a.x,br.a.y,br.b.x,br.b.y,r]);});
+  if(!balls.length)return;
+  const i0=clamp(Math.floor(x0/cell),1,nx-2),i1=clamp(Math.ceil(x1/cell),1,nx-2),j0=clamp(Math.floor(y0/cell),1,ny-2),j1=clamp(Math.ceil(y1/cell),1,ny-2);
+  for(let j=j0;j<=j1;j++){const py=j*cell;for(let i=i0;i<=i1;i++){const px=i*cell;let f=0;
+    for(const B of balls){const dx=px-B[0],dy=py-B[1];if(abs(dx)>200||abs(dy)>200)continue;
+      const lx=B[2]*dx+B[3]*dy,ly=B[4]*dx+B[5]*dy,q=lx*lx+ly*ly;if(q<4){const z=1-q*.25;f+=z*z*z;}}
+    for(const s of segs){const ex=s[2]-s[0],ey=s[3]-s[1],ll=ex*ex+ey*ey||1e-6;let u=((px-s[0])*ex+(py-s[1])*ey)/ll;u=u<0?0:u>1?1:u;
+      const qx=px-s[0]-ex*u,qy=py-s[1]-ey*u,rr=s[4]*(1-.6*S(Math.PI*u)),q=(qx*qx+qy*qy)/(rr*rr);if(q<4){const z=1-q*.25;f+=z*z*z;}}
+    vals[j*nx+i]=f;}}
+  // marching squares → slutna konturer
+  const T=GT,sg=[];
+  for(let j=j0-1;j<=j1;j++)for(let i=i0-1;i<=i1;i++){
+    const a=j*nx+i,tl=vals[a],tr=vals[a+1],br=vals[a+nx+1],bl=vals[a+nx];
+    const c=(tl>=T?8:0)|(tr>=T?4:0)|(br>=T?2:0)|(bl>=T?1:0);if(c===0||c===15)continue;
+    const top=2*a,bot=2*(a+nx),lef=2*a+1,rig=2*(a+1)+1,mid=(tl+tr+br+bl)/4>=T;
+    switch(c){case 1:case 14:sg.push(lef,bot);break;case 2:case 13:sg.push(bot,rig);break;case 3:case 12:sg.push(lef,rig);break;
+      case 4:case 11:sg.push(top,rig);break;case 6:case 9:sg.push(top,bot);break;case 7:case 8:sg.push(lef,top);break;
+      case 5:if(mid)sg.push(lef,top,bot,rig);else sg.push(top,rig,lef,bot);break;
+      case 10:if(mid)sg.push(top,rig,lef,bot);else sg.push(lef,top,bot,rig);break;}}
+  const pt=id=>{const e=id>>1,i=e%nx,j=(e/nx)|0,v0=vals[e],v1=(id&1)?vals[e+nx]:vals[e+1],u=clamp((T-v0)/((v1-v0)||1e-6),0,1);
+    return (id&1)?[i*cell,(j+u)*cell]:[(i+u)*cell,j*cell];};
+  const adj=new Map();for(let k=0;k<sg.length;k+=2){for(const e of [sg[k],sg[k+1]]){let l=adj.get(e);if(!l)adj.set(e,l=[]);l.push(k>>1);}}
+  const used=new Uint8Array(sg.length>>1);ctx.beginPath();
+  for(let s0=0;s0<used.length;s0++){if(used[s0])continue;used[s0]=1;const start=sg[2*s0];let e=sg[2*s0+1];const loop=[pt(start)];
+    for(let guard=0;e!==start&&guard<20000;guard++){loop.push(pt(e));let nx2=-1;for(const o of adj.get(e)||[])if(!used[o]){nx2=o;break;}
+      if(nx2<0)break;used[nx2]=1;e=sg[2*nx2]===e?sg[2*nx2+1]:sg[2*nx2];}
+    if(loop.length<3)continue;const L=loop.length,m=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];let st=m(loop[L-1],loop[0]);ctx.moveTo(st[0],st[1]);
+    for(let k=0;k<L;k++){const p=loop[k],q=m(p,loop[(k+1)%L]);ctx.quadraticCurveTo(p[0],p[1],q[0],q[1]);}ctx.closePath();}
+  ctx.fillStyle=b.color;ctx.fill('evenodd');
+}
+
+/* ---------- Scener ---------- */
+const scenes=[];
+function idleHover(b,t,s=1){ // gemensam svävning: gungning + oregelbunden drift + lutning
+  const ph=b.seed*TAU;
+  const bx=s*(.012*o(t,.31,ph)+.006*o(t,.73,ph*2));
+  return {by:s*(.026*o(t,1.05,ph)+.007*o(t,2.6,ph+1)),bx,
+    roll:s*(.055*o(t,.31,ph+1.1)+.018*o(t,1.05,ph+.4)),pitch:.07+s*.03*o(t,1.05,ph+1.6),
+    squash:s*.016*o(t,1.05,ph-1.2),splay:.6+s*.05*o(t,1.05,ph+2.4),bend:.35+s*.06*o(t,.8,ph)};
+}
+/* ====================== UI-lägen (kort) ====================== */
+const WX={};
+const HONEY='#EDB247',HONEY_HI='#FFE2A0';
+function drawHoney(b){const H=b.honey,y0=1-2*clamp(H.Ls,0,1)*1.0;if(H.Ls<.003)return;
+  ctx.save();ctx.globalAlpha=.94;ctx.fillStyle=HONEY;ctx.beginPath();const K=36,ys=[];
+  for(let k=0;k<=K;k++){const x=-1.3+2.6*k/K,y=y0+H.amp*S(x*5+H.ph)+.5*H.amp*S(x*9-H.ph*1.3)+H.tilt*x;ys.push([x,y]);k?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+  ctx.lineTo(1.3,1.4);ctx.lineTo(-1.3,1.4);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=.55;ctx.strokeStyle=HONEY_HI;ctx.lineWidth=.05;ctx.beginPath();ys.forEach((p,k)=>k?ctx.lineTo(p[0],p[1]+.03):ctx.moveTo(p[0],p[1]+.03));ctx.stroke();
+  ctx.restore();}
+function honeyStep(b){const H=b.honey,t=b.t,dt=clamp(t-(H.lt??t),0,.05);H.lt=t;if(dt<=0)return;
+  const prev=H.Ls;H.vL+=(60*(H.L-H.Ls)-14*H.vL)*dt;H.Ls+=H.vL*dt;
+  const rate=abs(H.Ls-prev)/dt;H.ph+=dt*(3.2+6*rate);
+  H.amp+=((.018+.05*clamp(rate,0,1.5)+.03*clamp(abs(b.vel.roll),0,2))-H.amp)*Math.min(1,dt*4);
+  H.tv+=(-40*(H.tilt+(-b.v.roll*.9))-5*H.tv)*dt-b.vel.roll*dt*2;H.tilt+=H.tv*dt;}
+function speechLevel(t){const env=ss(.15,.75,.5+.5*S(t*1.3)*S(t*.47+1));return clamp(env*(.45+.55*abs(S(t*9.1)*S(t*5.3+1))),0,1);}
+const DRIVERS={
+  lyckat(b,t,adv){const u=mod(t,2.8);if(adv&&b.prevU<.62&&u>=.62)kick(b,2.2);b.prevU=u;
+    const hp=win(u,.22,2.3,.15);
+    return {...idleHover(b,t,.4*(1-hp)),squash:.14*win(u,.02,.2,.06)-.05*win(u,.26,.5,.06),by:-.09*win(u,.25,.52,.1),
+      shape:'hexP',shapeAmt:win(u,.62,1.05,.1),scale:1+.06*win(u,.62,.85,.08),happy:hp,arch:.14,w:.3,escale:1+.06*hp,
+      splay:.62-.2*hp,len:.67+.08*hp,bend:.3,wang:1.02-.27*hp,wamp:.04+.24*win(u,.15,1.5,.1),wfreq:.45+11*win(u,.1,1.6,.1),blinkRate:0,dart:.03};},
+  fel(b,t,adv){const u=mod(t,3),sh=win(u,.08,.95,.08)*(1-u/1.2),x=win(u,.05,1.25,.08),after=ss(1.1,1.5,u)*(1-ss(2.7,3,u));
+    if(adv&&b.prevU<.08&&u>=.08)kick(b,-1.2);b.prevU=u;
+    return {yaw:.48*S(TAU*5.5*u)*sh,ox:.022*S(TAU*5.5*u)*sh,pitch:-.08*after,shape:'spiky',shapeAmt:.9*win(u,.06,.32,.06),
+      happy:.95*x,arch:.22,thick:.15,tilt:-1.45*x,escale:1+.05*x,
+      lidTop:.34*after,slant:.55*after,h:.6,
+      splay:mix(.62,1.45,ss(.5,1.1,u)*(1-ss(2.6,3,u))),bend:mix(.35,.62,after),len:.62,
+      wang:mix(1.15,1.75,after),wamp:.12*win(u,.05,.5,.05),wfreq:22,blinkRate:0,dart:0};},
+  forlopp(b,t){const H=b.honey;if(H.auto){const u=mod(t,8);
+      H.L=u<5.2?clamp(ss(0,5.2,u)*.96+.04*S(u*3)*ss(0,1,u),0,1)*(1-.02*S(u*7)):u<6.6?1:1-ss(6.6,7.6,u);}
+    honeyStep(b);const L=H.Ls,y0=1-2*L,g=win(mod(t,3.2),1.6,2.4,.12),full=H.L>.995?1:0;
+    return {...idleHover(b,t,.45),gy:clamp(y0*.95,-1,1)*g,gx:.15*g,pitch:.07-.14*y0*g,happy:full,arch:.13,splay:.62-.15*full,wamp:.04+.18*full,wfreq:.45+10*full,dart:.04*(1-g)};},
+  lyssnar(b,t){const lv=b.mic?b.mic.level:speechLevel(t);b.lvl=mix(b.lvl||0,lv,.25);const l=b.lvl;
+    return {...idleHover(b,t,.25),fwd:.7,splay:.34+.06*l,len:.74,bend:.1,escale:1.06+.06*l,open:1.05,gy:-.15,scale:1+.075*l,squash:-.05*l,
+      abuzz:.5*l,afwd:.1*l,wang:.9,wamp:.03+.05*l,wfreq:.5+14*l,dart:.02,blinkRate:.12};},
+  notis(b,t,adv){const u=mod(t,2.6);if(adv&&b.prevU<.32&&u>=.32)kick(b,1.6);if(adv&&b.prevU<.62&&u>=.62)kick(b,.8);b.prevU=u;const e=win(u,0,.75,.06);
+    return {...idleHover(b,t,.5*(1-e)),abuzz:win(u,0,.5,.04),by:-.06*win(u,.1,.28,.06)-.025*win(u,.42,.56,.05),escale:1+.12*e,w:.3,splay:.62-.22*e,len:.67+.07*e,pitch:.1*e,
+      wamp:.04+.2*win(u,.05,.45,.05),wfreq:12,dart:.02};},
+  tom(b,t){const u=mod(t,6.5),y=win(u,4,5,.3),br=o(t,.22);
+    return {by:.02+.008*br,squash:.05+.025*br-.12*y,pitch:-.12+.35*y,lidTop:.55+.06*br-.3*y,curveTop:.1,open:1-.85*y,roll:.03*o(t,.07),
+      splay:1.25-.85*y,bend:.5-.3*y,len:.6+.2*y,wfold:.5-.4*y,wang:1.5-.4*y,wamp:.02+.1*y,wfreq:.8,blinkStyle:'slow',blinkRate:.15,dart:.03};},
+  offline(b,t){const u=mod(t,5.4),sr=1-ss(3,3.4,u),sag=ss(3.1,3.6,u)*(1-ss(5,5.4,u)),p=TAU*.9*u;
+    return {...idleHover(b,t,.3),splayL:mix(.62,.2+.45*(.5+.5*S(p)),sr)+.95*sag,splayR:mix(.62,.2+.45*(.5+.5*S(p+Math.PI)),sr)+.95*sag,fwd:.45*sr,len:.72-.1*sag,bend:.35+.25*sag,
+      gx:.6*S(TAU*.45*u)*sr,gy:-.3*sr+.3*sag,yaw:.22*S(TAU*.45*u)*sr,pitch:.05-.25*sag,slant:-.5*sag,lidTop:.22*sag,squash:.08*sag,by:.03*sag,
+      wang:mix(1,1.9,sag),wfold:.15*sag,wamp:.05*sr,wfreq:3,dart:.04,blinkRate:.15};},
+  hej(b,t){const u=mod(t,6.4),wv=win(u,2.6,3.9,.12);
+    return {...idleHover(b,t,.4),splayR:.62-.3*wv+.38*S(TAU*2.3*(u-2.6))*wv,bendR:.35-.3*wv,happy:win(u,2.6,4.4,.15),arch:.14,escale:1.04,
+      wamp:.05+.18*win(u,2.5,3.3,.1),wfreq:11};}
+};
+// "Hej": boten stiger upp ur en pöl (goo) och smälter tillbaka
+function puddleGoo(b){const G=makeGoo('puddle');G.balls=[newBall(),newBall(),newBall()];G.auto=false;gooReset(G);G.necks=[];
+  G.custom=(b,G,d,adv)=>{const u=mod(b.t-b.t0,6.4);
+    if(u<2.4||u>=5.3){G.state='loop';G.render=true;G.acc=u>=5.3?1-ss(5.3,5.5,u):0;}
+    else if(u<4.9){if(G.state!=='bot'){G.state='bot';G.reform=0;reformKick(b);}G.reform+=d;G.render=false;G.acc=ss(0,.12,G.reform);}
+    else{G.state='ant';G.tau=u-4.9;G.render=false;G.acc=1;}
+    if(G.render)gooLayout(b,G,d);};
+  G.layout=(b,G,P)=>{const u=mod(b.t-b.t0,6.4),{Cx,Cy,Am,Bm,rad}=P,M=G.balls[0],L=G.balls[1],R=G.balls[2],py=Cy+Bm-.18*rad;
+    let A,B,y;L.on=R.on=false;
+    if(u<2.4){const c=ss(1.15,1.6,u),k=ss(1.6,2.25,u),e=win(u,1.75,2.15,.12);
+      A=mix(mix(1.5*rad*(1+.02*S(u*5)),1.1*rad,c),Am,k)*(1-.2*e);B=mix(mix(.2*rad*(1+.05*S(u*5+1)),.32*rad,c),Bm,k)*(1+.26*e);
+      y=mix(py,Cy,backOut(ss(1.6,2.2,u)));
+      const s=ss(1.75,2.3,u);if(u>1.75&&u<2.35){[L,R].forEach((x,i)=>{const sg=i?1:-1;x.on=true;x.x=Cx+sg*mix(1.0,.15,s)*rad;x.y=mix(py,Cy,s)-S(Math.PI*s)*.75*rad;x.A=x.B=.14*rad;});P.contact(L,1.8);P.contact(R,1.8);}
+      else L.touch=R.touch=false;}
+    else{const m=ss(5.3,6.0,u);A=mix(Am,1.5*rad,m)*(1+.08*win(u,5.5,5.9,.1));B=mix(Bm,.2*rad,m);y=mix(Cy,py,ss(5.3,5.95,u));
+      const s=ss(5.8,6.35,u);if(u>5.8){[L,R].forEach((x,i)=>{const sg=i?1:-1;x.on=true;x.x=Cx+sg*mix(.7,1.3,s)*rad;x.y=py-S(Math.PI*s)*.55*rad;x.A=x.B=.1*rad*(1-ss(6.2,6.4,u));});}}
+    M.x=Cx;M.y=y;M.A=A;M.B=B;M.on=true;};
+  return G;}
+
+/* ====================== Tillståndsmaskin ====================== */
+const STL={idle:'Vilar',thinking:'Tänker',working:'Arbetar',busy:'Upptagen',done:'Klar',typing:'Skriver',loading:'Laddar'};
+const SLOOP={
+  idle:(b,t)=>({...idleHover(b,t,.8),blinkStyle:'slow',blinkRate:.2,wamp:.035,wfreq:.45}),
+  thinking:(b,t)=>{const side=mod(t,6)<3.4?-1:-.3,tw=Math.max(0,o(t,.55))**6;
+    return {gx:.5*side,gy:-.62,yaw:.2*side,pitch:.2,roll:.09+.04*o(t,.15),lidBotL:.25,lidTopR:.22,slantR:.25,escaleL:1.03,by:.01*o(t,.5),
+      splayR:.42+.35*Math.max(0,o(t,1.4))**6,splayL:.75,bendL:.5,dart:.12,dartRate:.6,blinkRate:.18,wangL:1.15,wangR:1.05-.45*tw,wamp:.02,wfreq:.35};},
+  working:(b,t)=>{const r=mod(t*.7,1),sc=r<.8?-1+2.5*r:1-10*(r-.8);
+    return {by:.015*o(t,2),squash:.02*o(t,2,1),pitch:-.08,lidTop:.18,slant:.22,h:.6,gx:.55*clamp(sc,-1,1),gy:.1,yaw:.12*clamp(sc,-1,1),roll:.03*o(t,2),
+      fwd:.4,splay:.4+.05*o(t,2),len:.72,bend:.15,wang:.95,wamp:.09,wfreq:16,dart:.02,blinkRate:.12};},
+  busy:(b,t)=>{const tr=win(mod(t,2.2),0,.35,.06);
+    return {pitch:-.25,lidTop:.42,lidBot:.3,slant:.1,h:.58,gy:.25,ox:.012*o(t,11)*tr,buzz:.4*tr,
+      splay:-.42,bend:-.1,len:.76,fwd:.1,wfold:.3,wang:1.05,wamp:.06,wfreq:20,dart:.01,blinkRate:.08};},
+  done:(b,t)=>{const sh=win(mod(t,2.4),.1,.6,.1);
+    return {...idleHover(b,t,.6),happy:1,arch:.13,w:.3,roll:.05*o(t,.4)+.06*sh*S(TAU*4*t),splay:.5+.08*o(t,1.6),bend:.3,
+      wang:.85,wamp:.12+.1*sh,wfreq:1.2+8*sh,blinkRate:0};},
+  typing:(b,t)=>idleHover(b,t,.5),loading:(b,t)=>idleHover(b,t,.5)
+};
+// Övergångar: f(b,u,q) skriver över målets loop-pose; ev(b,u,prev) ger engångsknuffar
+const TR={
+  'idle>working':{dur:1.25,name:'vaknar, ögonen poppar, kavlar upp ärmarna',f:(b,u,q)=>{const w=ss(0,.18,u),sl=win(u,.4,.95,.06);
+    Object.assign(q,{escale:1+.22*win(u,.05,.35,.08),open:1.12*w+(1-w)*.4,lidTop:.18*ss(.9,1.2,u),
+      squash:.15*win(u,.42,.55,.04)-.06*win(u,.58,.68,.04)+.12*win(u,.72,.82,.04),roll:.1*S(TAU*2.5*(u-.4))*sl,yaw:.15*S(TAU*2.5*(u-.4))*sl,
+      splay:mix(1.0,.35,ss(.05,.25,u)),len:.78,wamp:.06+.18*win(u,.25,1.1,.1),wfreq:4+16*ss(.25,.9,u),wang:.9});},
+    ev:(b,u,p)=>{if(p<.05&&u>=.05){b.vel.splayL-=7;b.vel.splayR-=7;b.vel.escaleL+=4;b.vel.escaleR+=4;b.vel.wangL-=4;b.vel.wangR-=4;}}},
+  'working>idle':{dur:1.7,name:'andas ut, sätter sig och blinkar långsamt',f:(b,u,q)=>{const ex=win(u,.35,1.2,.15);
+    Object.assign(q,{scale:1+.05*win(u,0,.3,.1)-.03*ex,squash:.1*ex,by:.03*ex,pitch:.1*win(u,0,.3,.1)-.12*ex,
+      splay:mix(.6,1.05,ex),bend:.55*ex+.35*(1-ex),wfold:.7*ex,wang:1.2,wamp:.02,blinkStyle:'slow',lidTop:.25*ex,gy:.1*ex});},
+    ev:(b,u,p)=>{if(p<.55&&u>=.55){b.blink.next=b.t;}}},
+  'thinking>working':{dur:1.35,name:'aha! – ögonen vidgas, antennerna skjuter upp, ett hopp och sedan fokus',f:(b,u,q)=>{const a=win(u,0,.45,.05),lean=ss(.75,1.1,u);
+    Object.assign(q,{escale:1+.28*a,open:1.12,gx:0,gy:-.2*a,yaw:0,splay:mix(.15,q.splay,lean),len:.82-.1*lean,by:-.08*win(u,.18,.45,.06),squash:.1*win(u,.08,.17,.04),
+      pitch:.15*a-.12*lean,roll:.08*lean,lidTop:.22*lean,slant:.3*lean,wang:.7+.25*lean,wamp:.25*win(u,.1,.6,.05),wfreq:12});},
+    ev:(b,u,p)=>{if(p<.04&&u>=.04){b.vel.splayL-=8;b.vel.splayR-=8;b.vel.escaleL+=5;b.vel.escaleR+=5;b.vel.wangL-=6;b.vel.wangR-=6;}
+      if(p<.5&&u>=.5)kick(b,1.8);}},
+  'working>thinking':{dur:1.7,name:'pausar, tittar upp åt sidan och knackar sig i huvudet',f:(b,u,q)=>{const tap=win(u,.55,1.35,.08),tw=Math.max(0,S(TAU*2.6*(u-.55)))*tap;
+    Object.assign(q,{gx:mix(0,.55,ss(.2,.5,u)),gy:mix(0,-.65,ss(.2,.5,u)),yaw:.18*ss(.2,.5,u),pitch:.15,buzz:0,wamp:.01,
+      splayR:.55-1.05*tap-.15*tw,bendR:-.6*tap-.45*tw,fwdR:.85*tap,lenR:.72,splayL:.75,dart:0,blinkRate:0});},
+    ev:()=>{}},
+  '*>busy':{dur:1.1,name:'skyndar sig, huvudet ner – stör ej',f:(b,u,q)=>{const tr=win(u,0,.7,.08);
+    Object.assign(q,{buzz:.85*tr,ox:.02*S(TAU*12*u)*tr,pitch:mix(.05,-.25,ss(.2,.7,u)),splay:mix(.6,-.42,ss(.3,.85,u)),wamp:.1+.1*tr,wfreq:22});},
+    ev:(b,u,p)=>{if(p<.85&&u>=.85){b.vel.splayL+=3;b.vel.splayR+=3;}}},
+  'busy>idle':{dur:1.6,name:'lättnad – sjunker ihop och slappnar av',f:(b,u,q)=>{const s=win(u,.15,1.2,.2);
+    Object.assign(q,{by:.04*s,squash:.13*s,pitch:-.16*s,splay:mix(.62,1.45,s),bend:.6*s+.35*(1-s),open:1-.8*win(u,.3,.85,.1),wang:mix(1.02,1.8,s),wfold:.2*s,wamp:.02,lidTop:.1*s});},
+    ev:(b,u,p)=>{if(p<.15&&u>=.15){b.vel.splayL+=6;b.vel.splayR+=6;b.vel.squash+=1.2;}}},
+  '*>done':{dur:1.3,name:'lyckat-hoppet',f:(b,u,q)=>{const hp=win(u,.2,1.3,.12);
+    Object.assign(q,{squash:.14*win(u,.02,.2,.06),by:-.09*win(u,.25,.52,.1),shape:'hexP',shapeAmt:win(u,.62,1.05,.1),scale:1+.06*win(u,.62,.85,.08),happy:hp,arch:.14,
+      wang:.75,wamp:.26*win(u,.15,1.2,.1),wfreq:11});},
+    ev:(b,u,p)=>{if(p<.62&&u>=.62)kick(b,2.2);}}
+};
+const GENERIC={dur:.8,name:'byter läge',f:(b,u,q)=>{Object.assign(q,{squash:q.squash+.1*win(u,0,.2,.06)-.05*win(u,.25,.4,.06)});},
+  ev:(b,u,p)=>{if(p<.22&&u>=.22){b.blink.next=b.t;b.vel.splayL-=3;b.vel.splayR-=3;b.vel.wangL-=3;b.vel.wangR-=3;}}};
+const trFor=(a,b2)=>TR[a+'>'+b2]||TR['*>'+b2]||TR[a+'>*']||GENERIC;
+const SM={cur:'idle',tr:null,pending:null,auto:false,since:0,listeners:[],bot:null,goos:{}};
+function smLog(text){const el=root.querySelector('.sm-log');if(el)el.textContent=text;}
+function smButtons(){root.querySelectorAll('[data-state]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.state===(SM.tr?SM.tr.to:SM.pending||SM.cur))));}
+function smStart(to){const b=SM.bot,from=SM.cur;if(to===from&&!SM.tr)return;
+  const gk=to==='typing'?'typing':to==='loading'?'spinner':null;
+  if(gk){SM.tr=null;SM.cur=to;b.goo=SM.goos[gk];gooSet(b.goo,true);smLog(STL[from]+' → '+STL[to]+' · blir till droppar');}
+  else{const d=trFor(from,to);SM.tr={from,to,start:b.t,def:d,pu:0};smLog(STL[from]+' → '+STL[to]+' · '+d.name);
+    if(paused){SM.cur=to;SM.tr=null;}}
+  SM.since=b.t;smButtons();SM.listeners.forEach(f=>{try{f({from,to});}catch(e){}});if(paused)settle(SM.scene);}
+function smSet(to){if(!STL[to])return false;
+  const G=SM.bot.goo;if(G&&G.want){SM.pending=to;gooSet(G,false);if(paused){SM.pending=null;smStart(to);}smButtons();return true;}
+  if(G&&G.state!=='bot'){SM.pending=to;smButtons();return true;}
+  smStart(to);return true;}
+const NEXT={idle:['thinking','working','typing','loading'],thinking:['working','typing','idle'],working:['done','busy','thinking','loading'],
+  busy:['idle','working'],done:['idle','thinking'],typing:['idle','thinking'],loading:['done','working']};
+DRIVERS.machine=(b,t,adv)=>{
+  if(adv){const G=b.goo;
+    if(SM.pending&&(!G||(G.state==='bot'&&G.reform>.45))){const p=SM.pending;SM.pending=null;smStart(p);}
+    if(SM.auto&&!SM.tr&&!SM.pending&&(!G||G.state==='bot'||G.state==='loop')){const lim=SM.cur==='typing'||SM.cur==='loading'?4.2:3.4;
+      if(b.t-SM.since>lim){const n=NEXT[SM.cur];smSet(n[Math.floor(Math.random()*n.length)]);}}}
+  const tr=SM.tr,st=tr?tr.to:SM.cur,q=Object.assign({},BASE,SLOOP[st](b,t));
+  if(tr){const u=b.t-tr.start;tr.def.f(b,u,q);if(adv){tr.def.ev(b,u,tr.pu);tr.pu=u;if(u>=tr.def.dur){SM.cur=tr.to;SM.tr=null;smButtons();}}}
+  return q;};
+
+/* ====================== Uppsättning ====================== */
+function setupScene(el,id,idx){
+  const canvases=[...el.querySelectorAll('canvas')];
+  const sc={id,idx,el,canvases,bots:[],drive:DRIVERS[id],stripes:null,big:id==='machine'};
+  const b=makeBot(palette[el.dataset.col|0],sc,0);sc.bots.push(b);scenes.push(sc);
+  if(id==='forlopp')b.honey={L:0,Ls:0,vL:0,ph:0,amp:.02,tilt:0,tv:0,auto:true};
+  if(id==='hej')b.goo=puddleGoo(b);
+  if(id==='machine'){SM.bot=b;SM.scene=sc;SM.goos={typing:makeGoo('typing'),spinner:makeGoo('spinner')};SM.goos.typing.auto=SM.goos.spinner.auto=false;}
+  canvases.forEach(cv=>new ResizeObserver(()=>layout(sc)).observe(cv));
+  return sc;
+}
+function layout(sc){
+  const d=Math.min(window.devicePixelRatio||1,3);
+  sc.canvases.forEach(cv=>{const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
+    cv.width=Math.round(w*d);cv.height=Math.round(h*d);cv._d=d;cv._w=w;cv._h=h;
+    const b=sc.bots[0],rad=Math.min(w*.27,h/3.25,sc.big?100:58);b.rad=rad;b.cx=w/2;b.cy=h/2+rad*.33;b.canvas=cv;});
+  renderScene(sc);
+}
+function renderScene(sc){sc.canvases.forEach(cv=>{if(!cv._d)return;ctx=cv.getContext('2d');ctx.setTransform(cv._d,0,0,cv._d,0,0);ctx.clearRect(0,0,cv._w,cv._h);sc.bots.forEach(drawBot);});}
+const STILL={lyckat:.9,fel:.5,forlopp:2.5,lyssnar:1.2,notis:.3,tom:1,offline:1.2,hej:3,machine:1};
+function settle(sc){sc.bots.forEach(b=>{if(b.t<.01){b.t=STILL[sc.id]||1;if(b.honey){b.honey.L=b.honey.Ls=.6;}}b.prevU=99;
+  if(b.goo&&b.goo.custom){b.goo.state='bot';b.goo.render=false;b.goo.acc=1;}
+  for(let n=0;n<150;n++)step(b,1/60,false);if(b.honey){b.honey.Ls=b.honey.L;}});renderScene(sc);}
+root.querySelectorAll('[data-scene]').forEach((el,i)=>setupScene(el,el.dataset.scene,i));
+
+/* ====================== Interaktion ====================== */
+const pauseBtn=root.querySelector('.js-pause'),wAll=root.querySelector('.js-wings-all');
+const updatePause=()=>{pauseBtn.textContent=paused?'Spela':'Pausa';pauseBtn.setAttribute('aria-pressed',String(paused));};
+pauseBtn.addEventListener('click',()=>{paused=!paused;updatePause();if(paused)scenes.forEach(settle);});
+wAll.addEventListener('click',()=>{wingsAll=!wingsAll;wAll.setAttribute('aria-pressed',String(wingsAll));if(paused)scenes.forEach(sc=>{sc.bots.forEach(b=>b.fx.wings=wingsAll?1:0);renderScene(sc);});});
+reduceQ.addEventListener?.('change',e=>{if(e.matches&&!paused){paused=true;updatePause();scenes.forEach(settle);}});
+// Förlopp
+const fl=scenes.find(s=>s.id==='forlopp'),flB=fl.bots[0],rng=root.querySelector('.js-level'),flAuto=root.querySelector('.js-level-auto'),flOut=root.querySelector('.js-level-out');
+rng.addEventListener('input',()=>{flB.honey.auto=false;flB.honey.L=rng.value/100;flOut.textContent=rng.value+' %';flAuto.setAttribute('aria-pressed','false');if(paused){flB.honey.Ls=flB.honey.L;settle(fl);}});
+flAuto.addEventListener('click',()=>{flB.honey.auto=!flB.honey.auto;flAuto.setAttribute('aria-pressed',String(flB.honey.auto));});
+// Lyssnar: valfri mikrofon
+const ly=scenes.find(s=>s.id==='lyssnar'),lyB=ly.bots[0],micBtn=root.querySelector('.js-mic'),micOut=root.querySelector('.js-mic-out');
+micBtn.addEventListener('click',async()=>{
+  if(lyB.mic){lyB.mic.stop();lyB.mic=null;micBtn.textContent='Använd mikrofon';micBtn.setAttribute('aria-pressed','false');micOut.textContent='Simulerad nivå.';return;}
+  try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const AC=window.AudioContext||window.webkitAudioContext,ac=new AC(),src=ac.createMediaStreamSource(stream),an=ac.createAnalyser();
+    an.fftSize=512;src.connect(an);const buf=new Float32Array(an.fftSize);
+    const m={level:0,stop(){stream.getTracks().forEach(t=>t.stop());ac.close();}};
+    const tick=()=>{if(lyB.mic!==m)return;an.getFloatTimeDomainData(buf);let s=0;for(const v of buf)s+=v*v;m.level=clamp(Math.sqrt(s/buf.length)*9,0,1);requestAnimationFrame(tick);};
+    lyB.mic=m;tick();micBtn.textContent='Stäng av mikrofon';micBtn.setAttribute('aria-pressed','true');micOut.textContent='Lyssnar på mikrofonen (stannar på din enhet).';
+  }catch(e){micOut.textContent='Mikrofonen är inte tillgänglig – visar simulerad nivå.';}
+});
+// Tillstånd
+root.querySelectorAll('[data-state]').forEach(x=>x.addEventListener('click',()=>{SM.auto=false;autoBtn.setAttribute('aria-pressed','false');smSet(x.dataset.state);}));
+const autoBtn=root.querySelector('.js-sm-auto');
+autoBtn.addEventListener('click',()=>{SM.auto=!SM.auto;autoBtn.setAttribute('aria-pressed',String(SM.auto));SM.since=SM.bot.t-2;});
+window.beeState={
+  set:name=>smSet(name),get:()=>SM.tr?SM.tr.to:SM.pending||SM.cur,states:Object.keys(STL),
+  auto:on=>{SM.auto=!!on;autoBtn.setAttribute('aria-pressed',String(SM.auto));},
+  on:fn=>{SM.listeners.push(fn);return ()=>{SM.listeners=SM.listeners.filter(f=>f!==fn);};}
+};
+smButtons();smLog('Vilar');
+
+/* ====================== Loop ====================== */
+function advance(dt){const n=Math.ceil(dt/(1/120));scenes.forEach(sc=>{sc.bots.forEach(b=>{for(let k=0;k<n;k++)step(b,dt/n,true);});renderScene(sc);});}
+let last=0,manual=false;
+function frame(now){const dt=last?Math.min((now-last)/1000,.05):0;last=now;if(!paused&&!manual&&dt>0)advance(dt);requestAnimationFrame(frame);}
+window.beeDebug={manual:on=>{manual=on;},advance,stats:()=>JSON.parse(JSON.stringify(STATS)),sm:()=>({cur:SM.cur,tr:SM.tr&&SM.tr.to,pending:SM.pending,goo:SM.bot.goo&&SM.bot.goo.state})};
+updatePause();if(paused)requestAnimationFrame(()=>scenes.forEach(settle));
+requestAnimationFrame(frame);
+})();
+
+</script>
+</body></html>
